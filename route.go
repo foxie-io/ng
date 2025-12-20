@@ -39,9 +39,9 @@ func (r *route) Handler() Handler {
 	return r.handler
 }
 
-type HandlerOption = option
+type HandlerOption = Option
 
-func NewRoute(method string, path string, opt HandlerOption, opts ...option) Route {
+func NewRoute(method string, path string, opt HandlerOption, opts ...Option) Route {
 	route := &route{
 		method: method,
 		path:   normolizePath(path),
@@ -58,7 +58,7 @@ func NewRoute(method string, path string, opt HandlerOption, opts ...option) Rou
 func (r *route) addPreCore(preCores ...Core) Route {
 	var (
 		responseHander ResponseHandler
-		preExcutes     = []Handler{}
+		preExcutes     = []PreHandler{}
 		guards         = []Guard{}
 		middlewares    = []Middleware{}
 		prefix         string

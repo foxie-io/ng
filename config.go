@@ -29,15 +29,15 @@ func (c *config) bindApp(app *app) {
 }
 
 // to bind before update
-func (c *config) update(opts ...option) {
+func (c *config) update(opts ...Option) {
 	for _, u := range opts {
 		u(c)
 	}
 }
 
-type option func(*config)
+type Option func(*config)
 
-func Opitons(opts ...option) option {
+func Opitons(opts ...Option) Option {
 	return func(c *config) {
 		for _, o := range opts {
 			o(c)

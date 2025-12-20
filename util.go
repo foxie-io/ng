@@ -39,9 +39,8 @@ func ExtractControllerRoutes(app App, config ControllerInitializer) ([]Route, er
 
 			route.name = strings.Replace(fmt.Sprintf("%T.%s", config, funcName.Name), "*", "", 1)
 			route.core.preExecutes = append(route.core.preExecutes,
-				func(ctx context.Context) error {
+				func(ctx context.Context) {
 					GetContext(ctx).setOwner(app, config, route)
-					return nil
 				},
 			)
 

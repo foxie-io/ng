@@ -29,6 +29,9 @@ func FiberHandler(scopeHandler func() ng.Handler) fiber.Handler {
 		// store fiber context
 		ng.Store(ctx, fctx)
 
+		ip := fctx.IP()
+		ng.Store(ctx, ClientIp(ip))
+
 		// get fiber context from ng ctx
 		// fctx := ng.MustLoad[*fiber.Ctx](ctx)
 		return scopeHandler()(ctx)

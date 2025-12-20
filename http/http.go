@@ -20,14 +20,14 @@ var _ interface {
 // error response
 func NewError(code Code, statusCode int, message string) *Response {
 	return &Response{
-		Code:    code,
-		Data:    statusCode,
-		Message: &message,
+		Code:       code,
+		statusCode: statusCode,
+		Message:    &message,
 	}
 }
 
 // success response
-func NewReponse(data any, opts ...Option) *Response {
+func NewResponse(data any, opts ...Option) *Response {
 	return (&Response{
 		Code:       CodeOk,
 		statusCode: http.StatusOK,

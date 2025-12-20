@@ -6,6 +6,8 @@ import (
 	"example/basic/components/orders"
 	"example/basic/components/users"
 	"example/basic/middlewares"
+	"example/basic/middlewares/limiter"
+	"time"
 
 	"net/http"
 
@@ -34,12 +36,11 @@ func (con *HeallthControler) InitializeController() ng.Controller {
 // curl 'localhost:8080/stats'
 func (con *HeallthControler) Index() ng.Route {
 	return ng.NewRoute(http.MethodGet, "/", ng.WithHandler(func(ctx context.Context) error {
-		return ng.Respond(ctx, nghttp.NewReponse("I am ok!"))
+		return ng.Respond(ctx, nghttp.NewResponse("I am ok!"))
 	}))
 }
 
 func main() {
-
 	stats := middlewares.NewStats()
 	app := ng.NewApp(
 		ng.WithMiddleware(
@@ -49,6 +50,28 @@ func main() {
 
 		// set response handler to echo adapter
 		ng.WithResponseHandler(adapters.DynamicResponseHandler),
+
+		// limiter
+		ng.WithGuards(
+			limiter.New(&limiter.Config{
+				Limit:  3,
+				Window: time.Second * 10,
+				GenerateID: func(ctx context.Context) string {
+					ip := ng.MustLoad[adapters.ClientIp](ctx)
+					return string(ip)
+				},
+				ErrorHandler: func(ctx context.Context) error {
+					data := ng.MustLoad[*limiter.ClientData](ctx)
+					return nghttp.NewErrTooManyRequests().Update(
+						nghttp.Meta(
+							"Limit", data.Limit,
+							"Remaining", data.Limit-data.ReqCounts,
+							"ResetAt", data.ResetAt,
+						),
+					)
+				},
+			}),
+		),
 	)
 
 	// Add controllers

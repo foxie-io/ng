@@ -22,7 +22,7 @@ func (c *controller) Core() Core {
 	return c.core
 }
 
-func NewController(opts ...option) Controller {
+func NewController(opts ...Option) Controller {
 	controller := &controller{core: newCore()}
 
 	config := newConfig()

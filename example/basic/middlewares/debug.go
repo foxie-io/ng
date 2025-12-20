@@ -17,7 +17,7 @@ type HttpDebug struct {
 	ng.DefaultID[HttpDebug]
 }
 
-func (m HttpDebug) Use(ctx context.Context, next ng.Handler) error {
+func (m HttpDebug) Use(ctx context.Context, next ng.Handler) {
 	start := time.Now()
 
 	defer func() {
@@ -25,13 +25,10 @@ func (m HttpDebug) Use(ctx context.Context, next ng.Handler) error {
 		route := rc.Route()
 		response := rc.GetResponse()
 
-		log.Println(route.Name(), response.StatusCode(), route.Method(), route.Path(), time.Since(start))
-
+		if response != nil {
+			log.Println(route.Name(), response.StatusCode(), route.Method(), route.Path(), time.Since(start))
+		}
 	}()
 
-	if err := next(ctx); err != nil {
-		return err
-	}
-
-	return nil
+	next(ctx)
 }

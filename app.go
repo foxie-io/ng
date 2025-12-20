@@ -25,12 +25,12 @@ func (a *app) Core() Core {
 	return a.core
 }
 
-func NewApp(opts ...option) App {
+func NewApp(opts ...Option) App {
 	app := &app{core: newCore()}
 	return app.update(opts...)
 }
 
-func (a *app) update(opts ...option) App {
+func (a *app) update(opts ...Option) App {
 	if a.core.built.Load() {
 		panic("app is builded can't update")
 	}

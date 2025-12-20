@@ -40,7 +40,7 @@ type (
 		prefix string
 
 		// root execution
-		preExecutes []Handler
+		preExecutes []PreHandler
 
 		middlewares []Middleware
 
@@ -75,18 +75,33 @@ func (c *core) Prefix() string {
 
 func (c *core) applyPreExecutes(ctx context.Context) error {
 	for _, pre := range c.preExecutes {
-		if err := pre(ctx); err != nil {
-			return err
-		}
+		pre(ctx)
 	}
 
 	return nil
 }
 
-func (c *core) applyGuards(ctx context.Context) error {
+func errResponseState(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if resp, ok := err.(nghttp.HttpResponse); ok {
+		GetContext(ctx).SetResponse(resp)
+		return err
+	}
+
+	return err
+}
+
+func (c *core) applyGuards(ctx context.Context) (err error) {
 	if len(c.guards) == 0 {
 		return nil
 	}
+
+	defer func() {
+		err = errResponseState(ctx, err)
+	}()
 
 	skipIds := getSkipperIds(ctx)
 	if hasSkipAllGuards := slices.Contains(getSkipperIds(ctx), allGuard); !hasSkipAllGuards {
@@ -111,12 +126,17 @@ func (c *core) buildMiddlewareChain(routeHandler Handler) Handler {
 		m := c.middlewares[i]
 		n := next
 
-		next = func(ctx context.Context) error {
+		next = func(ctx context.Context) (err error) {
+			defer func() {
+				err = errResponseState(ctx, err)
+			}()
+
 			if canSkip(m, getSkipperIds(ctx)) { // runtime evaluation
 				return n(ctx)
 			}
 
-			return m.Use(ctx, n)
+			m.Use(ctx, n)
+			return nil
 		}
 	}
 
@@ -130,19 +150,24 @@ func (c *core) buildInterceptorChain(routeHandler Handler) Handler {
 		m := c.interceptors[i]
 		n := next
 
-		next = func(ctx context.Context) error {
+		next = func(ctx context.Context) (err error) {
+			defer func() {
+				err = errResponseState(ctx, err)
+			}()
+
 			if canSkip(m, getSkipperIds(ctx)) { // runtime evaluation
 				return n(ctx)
 			}
 
-			return m.Intercept(ctx, n)
+			m.Intercept(ctx, n)
+			return nil
 		}
 	}
 
 	return next
 }
 
-func WithPrefix(prefix string) option {
+func WithPrefix(prefix string) Option {
 	return func(c *config) {
 		c.core.prefix = normolizePath(prefix)
 	}
@@ -151,26 +176,26 @@ func WithPrefix(prefix string) option {
 /*
 can use IgnoreGuard to skip
 */
-func WithGuards(guards ...Guard) option {
+func WithGuards(guards ...Guard) Option {
 	return func(c *config) {
 		c.core.guards = append(c.core.guards, guards...)
 	}
 }
 
-func WithMiddleware(middlewares ...Middleware) option {
+func WithMiddleware(middlewares ...Middleware) Option {
 	return func(c *config) {
 		c.core.middlewares = append(c.core.middlewares, middlewares...)
 	}
 }
 
-func WithInterceptor(interceptors ...Interceptor) option {
+func WithInterceptor(interceptors ...Interceptor) Option {
 	return func(c *config) {
 		c.core.interceptors = append(c.core.interceptors, interceptors...)
 	}
 }
 
 // WithMetadata requires key-value pairs
-func WithMetadata(pairs ...any) option {
+func WithMetadata(pairs ...any) Option {
 	if len(pairs)%2 != 0 {
 		panic("WithMetadata requires key-value pairs")
 	}
@@ -183,14 +208,14 @@ func WithMetadata(pairs ...any) option {
 	}
 }
 
-func WithResponseHandler(handler ResponseHandler) option {
+func WithResponseHandler(handler ResponseHandler) Option {
 	return func(c *config) {
 		c.core.responseHandler = handler
 	}
 }
 
 // root level execution: before guard,middleware,etc...
-func WithPreExecute(pre Handler) option {
+func WithPreExecute(pre PreHandler) Option {
 	return func(c *config) {
 		c.core.preExecutes = append(c.core.preExecutes, pre)
 	}

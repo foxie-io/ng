@@ -2,7 +2,6 @@ package controller_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -34,14 +33,10 @@ type Log struct {
 	Level string
 }
 
-func (u Log) Use(ctx context.Context, next ng.Handler) error {
+func (u Log) Use(ctx context.Context, next ng.Handler) {
 	u.logBefore("Middleware before")
 
-	if u.Level == "C-1" {
-		return errors.New("dudu")
-	}
-
-	return next(ctx)
+	next(ctx)
 }
 
 func (u Log) logBefore(name string) {
@@ -56,10 +51,10 @@ func (u Log) logAfter(name string) {
 	log.Println(w, name, u.Level)
 }
 
-func (u Log) Intercept(ctx context.Context, next ng.Handler) error {
+func (u Log) Intercept(ctx context.Context, next ng.Handler) {
 	u.logBefore("Intercept before")
 	defer u.logAfter("Intercept Ater")
-	return next(ctx)
+	next(ctx)
 }
 
 func (u Log) Allow(ctx context.Context) error {
@@ -71,9 +66,8 @@ func (u Log) Allow(ctx context.Context) error {
 func (c *UserController) InitializeController() ng.Controller {
 	return ng.NewController(
 		ng.WithPreExecute(
-			func(ctx context.Context) error {
+			func(ctx context.Context) {
 				log.Println("preExecute-Controller")
-				return nil
 			},
 		),
 		ng.WithMiddleware(Log{Level: "C-1"}),
@@ -84,14 +78,12 @@ func (c *UserController) Register() ng.Route {
 	return ng.NewRoute(http.MethodPost, "/register",
 		ng.WithMiddleware(Log{Level: "R-1"}, Log{Level: "R-2"}),
 		ng.WithInterceptor(Log{Level: "R-1"}, Log{Level: "R-2"}),
-		ng.WithPreExecute(func(ctx context.Context) error {
-			return nil
-		}),
+
 		ng.WithHandler(func(ctx context.Context) error {
 			whitespace++
 			w := strings.Repeat("  ", whitespace)
 			log.Println(w, "Handler: i am from route ->", ng.GetContext(ctx).Route().Path())
-			return ng.Respond(ctx, nghttp.NewReponse("register is token"))
+			return ng.Respond(ctx, nghttp.NewResponse("register is token"))
 		}),
 		ng.SkipAllGuards(),
 	)
@@ -102,9 +94,7 @@ func TestController(t *testing.T) {
 		ng.WithPrefix("/app"),
 		ng.WithMiddleware(Log{Level: "A-1"}),
 		ng.WithGuards(Log{Level: "A-1"}),
-		ng.WithPreExecute(func(ctx context.Context) error {
-			return nil
-		}),
+
 		ng.WithResponseHandler(func(ctx context.Context, info *ng.ResponseInfo) error {
 			rc := ng.GetContext(ctx)
 			log.Println("ResponseHandler:", rc.Route().Path(), info.Raw)

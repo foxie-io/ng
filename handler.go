@@ -4,6 +4,8 @@ import "context"
 
 type Handler func(ctx context.Context) error
 
+type PreHandler func(ctx context.Context)
+
 // Handle simple
 
 func Handle(handlers ...Handler) Handler {
@@ -84,7 +86,7 @@ func UseTokenParser() {
 	return &TokenParser{}
 }
 
-func (ag *TokenParser) Use(ctx context.Context, next Handler) error {
+func (ag *TokenParser) Use(ctx context.Context, next Handler) {
 	echoCtx := ng.MustLoad[echo.Context](ctx)
 	token := getToken(echoCtx)
 
@@ -94,11 +96,11 @@ func (ag *TokenParser) Use(ctx context.Context, next Handler) error {
 	}
 
 	// parse token
-	return next(ctx)
+	next(ctx)
 }
 */
 type Middleware interface {
-	Use(ctx context.Context, next Handler) error
+	Use(ctx context.Context, next Handler)
 }
 
 // Guard is responsible for access control.
@@ -156,7 +158,7 @@ type Guard interface {
 //
 // Interceptors must call next to continue the request flow.
 /*
-Intercept(ctx context.Context, next Handler) error {
+Intercept(ctx context.Context, next Handler) {
 	// middleware can write like this too to have more control that cover guard's opertions
 
 	// before operation
@@ -171,9 +173,9 @@ Intercept(ctx context.Context, next Handler) error {
 	}()
 
 	// current operation
-	return next(ctx)
+	next(ctx)
 }
 */
 type Interceptor interface {
-	Intercept(ctx context.Context, next Handler) error
+	Intercept(ctx context.Context, next Handler)
 }

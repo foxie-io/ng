@@ -30,6 +30,9 @@ func EchoHandler(scopeHandler func() ng.Handler) echo.HandlerFunc {
 		// store echo context
 		ng.Store(ctx, echoCtx)
 
+		ip := echoCtx.RealIP()
+		ng.Store(ctx, ClientIp(ip))
+
 		// get echo context from ng ctx
 		// echoCtx := ng.MustLoad[echo.Context](ctx)
 		return scopeHandler()(ctx)

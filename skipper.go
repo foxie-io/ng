@@ -39,7 +39,7 @@ func (s DefaultID[T]) NgID() string {
 // Any middleware, guard, or interceptor implementing Skipper
 // whose SkipID matches one of the provided skippers will be skipped
 // during request execution.
-func WithSkip(skippers ...ID) option {
+func WithSkip(skippers ...ID) Option {
 	skipIds := make([]string, len(skippers))
 	for i := range skippers {
 		skipIds[i] = skippers[i].NgID()
@@ -54,7 +54,7 @@ const allGuard string = "all_guards"
 //
 // This is useful for public endpoints such as health checks
 // or authentication callbacks.
-func SkipAllGuards() option {
+func SkipAllGuards() Option {
 	return WithMetadata(skipperKey{}, []string{allGuard})
 }
 

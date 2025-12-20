@@ -32,6 +32,9 @@ func ServeMuxHandler(scopeHandler func() ng.Handler) http.HandlerFunc {
 		// store http.ResponseWriter in context
 		ng.Store(ctx, w)
 
+		ip := r.RemoteAddr
+		ng.Store(ctx, ClientIp(ip))
+
 		// invoke the handler
 		scopeHandler()(ctx)
 	}

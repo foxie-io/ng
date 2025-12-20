@@ -27,7 +27,7 @@ func (con *UserTodoController) Hello() ng.Route {
 		ng.WithHandler(func(ctx context.Context) error {
 			rc := ng.GetContext(ctx)
 			txt := rc.Route().Name() + " Hello World!"
-			return ng.Respond(ctx, nghttp.NewReponse(txt))
+			return ng.Respond(ctx, nghttp.NewResponse(txt))
 		}),
 	)
 }
