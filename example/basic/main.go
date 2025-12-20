@@ -67,15 +67,11 @@ func main() {
 	echoHttp := echo.New()
 	fiberHttp := fiber.New()
 
+	// Build app before registering routes to adapters
 	app.Build()
-
 	adapters.ServeMuxRegisterRoutes(app, muxHttp)
 	adapters.EchoRegisterRoutes(app, echoHttp)
 	adapters.FiberRegisterRoutes(app, fiberHttp)
-
-	go func() {
-
-	}()
 
 	go fiberHttp.Listen(":8082")
 	go http.ListenAndServe(":8080", muxHttp)
