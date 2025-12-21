@@ -80,7 +80,9 @@ var requestContextPool = sync.Pool{
 
 // NewContext create a new request context
 func acquireContext() Context {
-	return requestContextPool.Get().(*RequestContext)
+	ctx := requestContextPool.Get().(*RequestContext)
+	ctx.Clear()
+	return ctx
 }
 
 // Store store value into context with given key
@@ -184,7 +186,6 @@ func (r *RequestContext) Clone() Context {
 }
 
 func (r *RequestContext) Release() {
-	r.Clear()
 	requestContextPool.Put(r)
 }
 
