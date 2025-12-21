@@ -21,14 +21,14 @@ func GinResponseHandler(ctx context.Context, info *ng.ResponseInfo) error {
 
 func GinHandler(scopeHandler func() ng.Handler) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		ngCtx := ng.NewContext()
-		context := ng.WithContext(ctx.Request.Context(), ngCtx)
+		_, rc := ng.AcquireContext(ctx.Request.Context())
+		defer rc.Release()
 
 		// Store Gin context in NG context
-		ng.Store(context, ctx)
+		ng.Store(ctx, ctx)
 
 		// Invoke the handler
-		scopeHandler()(context)
+		scopeHandler()(ctx)
 	}
 }
 

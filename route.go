@@ -125,7 +125,10 @@ func (r *route) buildFinalHandler() Handler {
 	finalHandler := c.buildMiddlewareChain(guardChain)
 
 	return func(ctx context.Context) (returnErr error) {
-		ctx, _ = WrapContext(ctx)
+		ctx, rc, created := acquireContextCheck(ctx)
+		if created {
+			defer rc.Release()
+		}
 
 		defer func() {
 

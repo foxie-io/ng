@@ -27,8 +27,8 @@ func ChiResponseHandler(ctx context.Context, info *ng.ResponseInfo) error {
 
 func ChiHandler(scopeHandler func() ng.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ngCtx := ng.NewContext()
-		ctx := ng.WithContext(r.Context(), ngCtx)
+		ctx, rc := ng.AcquireContext(r.Context())
+		defer rc.Release()
 
 		// store http request and response writer
 		ng.Store(ctx, w)

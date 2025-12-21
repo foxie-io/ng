@@ -24,8 +24,8 @@ func EchoResponseHandler(ctx context.Context, info *ng.ResponseInfo) error {
 
 func EchoHandler(scopeHandler func() ng.Handler) echo.HandlerFunc {
 	return func(echoCtx echo.Context) error {
-		ngCtx := ng.NewContext()
-		ctx := ng.WithContext(echoCtx.Request().Context(), ngCtx)
+		ctx, rc := ng.AcquireContext(echoCtx.Request().Context())
+		defer rc.Release()
 
 		// store echo context
 		ng.Store(ctx, echoCtx)

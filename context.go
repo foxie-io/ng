@@ -34,6 +34,9 @@ type Context interface {
 	// Clear clear all info stored in context
 	Clear()
 
+	// Delete delete value from context by given key
+	Delete(key PayloadKeyer)
+
 	// SetResponse
 	SetResponse(resp nghttp.HttpResponse) Context
 
@@ -54,6 +57,12 @@ type Context interface {
 
 	// not available pre execute
 	Config() ControllerInitializer
+
+	// release context back to pool
+	Release()
+
+	// clone context for goroutine use
+	Clone() Context
 }
 
 var _ Context = (*RequestContext)(nil)
@@ -62,9 +71,16 @@ type RequestContext struct {
 	locals sync.Map
 }
 
+// Add a sync.Pool for RequestContext
+var requestContextPool = sync.Pool{
+	New: func() any {
+		return &RequestContext{}
+	},
+}
+
 // NewContext create a new request context
-func NewContext() Context {
-	return &RequestContext{}
+func acquireContext() Context {
+	return requestContextPool.Get().(*RequestContext)
 }
 
 // Store store value into context with given key
@@ -75,6 +91,11 @@ func (r *RequestContext) Store(key PayloadKeyer, value any) {
 // Load load value from context by given key
 func (r *RequestContext) Load(key PayloadKeyer) (value any, ok bool) {
 	return r.locals.Load(key.PayloadKey())
+}
+
+// Delete delete value from context by given key
+func (r *RequestContext) Delete(key PayloadKeyer) {
+	r.locals.Delete(key.PayloadKey())
 }
 
 // LoadOrStore load value from context by given key,
@@ -152,6 +173,21 @@ func (r *RequestContext) Route() Route {
 	return nil
 }
 
+// Clone create a clone of request context to use in goroutine after request end
+func (r *RequestContext) Clone() Context {
+	clone := &RequestContext{}
+	r.locals.Range(func(key, value any) bool {
+		clone.locals.Store(key, value)
+		return true
+	})
+	return clone
+}
+
+func (r *RequestContext) Release() {
+	r.Clear()
+	requestContextPool.Put(r)
+}
+
 func dynamicKey[T any](keys ...PayloadKeyer) PayloadKeyer {
 	if len(keys) == 0 {
 		return TypeKey[T]{}
@@ -180,6 +216,11 @@ func Load[T any](ctx context.Context, keys ...PayloadKeyer) (value T, err error)
 	}
 
 	return expectedType, nil
+}
+
+func Delete[T any](ctx context.Context, keys ...PayloadKeyer) {
+	key := dynamicKey[T](keys...)
+	GetContext(ctx).Delete(key)
 }
 
 // LoadOrStore load value from context by given key,
@@ -214,17 +255,28 @@ func MustLoadOrStore[T any](ctx context.Context, value T, keys ...PayloadKeyer) 
 	return val, loaded
 }
 
-func WithContext(ctx context.Context, rctx Context) context.Context {
+func withContext(ctx context.Context, rctx Context) context.Context {
 	return context.WithValue(ctx, TypeKey[Context]{}, rctx)
 }
 
-func WrapContext(ctx context.Context) (context.Context, Context) {
-	rc := GetContext(ctx)
+/*
+Release is a must
+
+	_,rc := AcquireContext(ctx)
+	defer rc.Release()
+*/
+func AcquireContext(ctx context.Context) (context.Context, Context) {
+	rc := acquireContext()
+	return withContext(ctx, rc), rc
+}
+
+func acquireContextCheck(ctx context.Context) (c context.Context, rc Context, new bool) {
+	rc = GetContext(ctx)
 	if rc == nil {
-		rc = NewContext()
-		return WithContext(ctx, rc), rc
+		rc = acquireContext()
+		return withContext(ctx, rc), rc, true
 	}
-	return ctx, rc
+	return ctx, rc, false
 }
 
 // GetContext get context from given context
