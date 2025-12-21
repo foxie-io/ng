@@ -23,8 +23,7 @@ func FiberResponseHandler(ctx context.Context, info *ng.ResponseInfo) error {
 
 func FiberHandler(scopeHandler func() ng.Handler) fiber.Handler {
 	return func(fctx *fiber.Ctx) error {
-		ctx, rc := ng.AcquireContext(fctx.Context())
-		defer rc.Release()
+		ctx, _ := ng.AcquireContext(fctx.Context())
 
 		// store fiber context
 		ng.Store(ctx, fctx)

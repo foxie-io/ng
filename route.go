@@ -127,7 +127,7 @@ func (r *route) buildFinalHandler() Handler {
 	return func(ctx context.Context) (returnErr error) {
 		ctx, rc, created := acquireContextCheck(ctx)
 		if created {
-			defer rc.Release()
+			defer rc.Clear()
 		}
 
 		defer func() {

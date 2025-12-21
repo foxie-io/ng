@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"sync"
 
 	nghttp "github.com/foxie-io/ng/http"
@@ -58,67 +57,56 @@ type Context interface {
 	// not available pre execute
 	Config() ControllerInitializer
 
-	// release context back to pool
-	Release()
-
 	// clone context for goroutine use
 	Clone() Context
 }
 
-var _ Context = (*RequestContext)(nil)
+var _ Context = (*requestContext)(nil)
 
-type RequestContext struct {
+type requestContext struct {
+	id     string
 	locals sync.Map
 }
 
-// Add a sync.Pool for RequestContext
-var requestContextPool = sync.Pool{
-	New: func() any {
-		return &RequestContext{}
-	},
-}
-
-// NewContext create a new request context
-func acquireContext() Context {
-	ctx := requestContextPool.Get().(*RequestContext)
-	ctx.Clear()
-	return ctx
+func newRequestContext() *requestContext {
+	r := &requestContext{}
+	return r
 }
 
 // Store store value into context with given key
-func (r *RequestContext) Store(key PayloadKeyer, value any) {
+func (r *requestContext) Store(key PayloadKeyer, value any) {
 	r.locals.Store(key.PayloadKey(), value)
 }
 
 // Load load value from context by given key
-func (r *RequestContext) Load(key PayloadKeyer) (value any, ok bool) {
+func (r *requestContext) Load(key PayloadKeyer) (value any, ok bool) {
 	return r.locals.Load(key.PayloadKey())
 }
 
 // Delete delete value from context by given key
-func (r *RequestContext) Delete(key PayloadKeyer) {
+func (r *requestContext) Delete(key PayloadKeyer) {
 	r.locals.Delete(key.PayloadKey())
 }
 
 // LoadOrStore load value from context by given key,
 // if not found, store the value into context
-func (r *RequestContext) LoadOrStore(key PayloadKeyer, value any) (actual any, loaded bool) {
+func (r *requestContext) LoadOrStore(key PayloadKeyer, value any) (actual any, loaded bool) {
 	return r.locals.LoadOrStore(key.PayloadKey(), value)
 }
 
 // Clear clear all info stored in context
-func (r *RequestContext) Clear() {
+func (r *requestContext) Clear() {
 	r.locals.Clear()
 }
 
 // SetResponse set request response
-func (r *RequestContext) SetResponse(resp nghttp.HttpResponse) Context {
+func (r *requestContext) SetResponse(resp nghttp.HttpResponse) Context {
 	r.Store(responseKey, resp)
 	return r
 }
 
 // Response get request response
-func (r *RequestContext) GetResponse() nghttp.HttpResponse {
+func (r *requestContext) GetResponse() nghttp.HttpResponse {
 	resp, ok := r.Load(responseKey)
 	if ok {
 		return resp.(nghttp.HttpResponse)
@@ -126,7 +114,7 @@ func (r *RequestContext) GetResponse() nghttp.HttpResponse {
 	return nil
 }
 
-func (r *RequestContext) Response() error {
+func (r *requestContext) Response() error {
 	resp := r.GetResponse()
 	if resp == nil {
 		return errors.New("response not found")
@@ -136,7 +124,7 @@ func (r *RequestContext) Response() error {
 	return nil
 }
 
-func (r *RequestContext) GetRoute() Route {
+func (r *requestContext) GetRoute() Route {
 	resp, ok := r.Load(routeKey)
 	if ok {
 		return resp.(Route)
@@ -144,14 +132,14 @@ func (r *RequestContext) GetRoute() Route {
 	return nil
 }
 
-func (r *RequestContext) setOwner(app App, config ControllerInitializer, route Route) Context {
+func (r *requestContext) setOwner(app App, config ControllerInitializer, route Route) Context {
 	r.Store(appKey, app)
 	r.Store(controllerConfigKey, config)
 	r.Store(routeKey, route)
 	return r
 }
 
-func (r *RequestContext) Config() ControllerInitializer {
+func (r *requestContext) Config() ControllerInitializer {
 	resp, ok := r.Load(controllerConfigKey)
 	if ok {
 		return resp.(ControllerInitializer)
@@ -159,7 +147,7 @@ func (r *RequestContext) Config() ControllerInitializer {
 	return nil
 }
 
-func (r *RequestContext) App() App {
+func (r *requestContext) App() App {
 	resp, ok := r.Load(appKey)
 	if ok {
 		return resp.(App)
@@ -167,7 +155,7 @@ func (r *RequestContext) App() App {
 	return nil
 }
 
-func (r *RequestContext) Route() Route {
+func (r *requestContext) Route() Route {
 	resp, ok := r.Load(routeKey)
 	if ok {
 		return resp.(Route)
@@ -176,8 +164,8 @@ func (r *RequestContext) Route() Route {
 }
 
 // Clone create a clone of request context to use in goroutine after request end
-func (r *RequestContext) Clone() Context {
-	clone := &RequestContext{}
+func (r *requestContext) Clone() Context {
+	clone := &requestContext{}
 	r.locals.Range(func(key, value any) bool {
 		clone.locals.Store(key, value)
 		return true
@@ -185,8 +173,8 @@ func (r *RequestContext) Clone() Context {
 	return clone
 }
 
-func (r *RequestContext) Release() {
-	requestContextPool.Put(r)
+func (r *requestContext) ID() string {
+	return r.id
 }
 
 func dynamicKey[T any](keys ...PayloadKeyer) PayloadKeyer {
@@ -260,24 +248,25 @@ func withContext(ctx context.Context, rctx Context) context.Context {
 	return context.WithValue(ctx, TypeKey[Context]{}, rctx)
 }
 
-/*
-Release is a must
-
-	_,rc := AcquireContext(ctx)
-	defer rc.Release()
-*/
+// if return existed ctx, otherwise create new one
 func AcquireContext(ctx context.Context) (context.Context, Context) {
-	rc := acquireContext()
+	rc := GetContext(ctx)
+	if rc != nil {
+		return ctx, rc
+	}
+
+	rc = newRequestContext()
 	return withContext(ctx, rc), rc
 }
 
 func acquireContextCheck(ctx context.Context) (c context.Context, rc Context, new bool) {
 	rc = GetContext(ctx)
-	if rc == nil {
-		rc = acquireContext()
-		return withContext(ctx, rc), rc, true
+	if rc != nil {
+		return ctx, rc, false
 	}
-	return ctx, rc, false
+
+	rc = newRequestContext()
+	return withContext(ctx, rc), rc, true
 }
 
 // GetContext get context from given context

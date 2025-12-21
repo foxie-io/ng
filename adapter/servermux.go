@@ -26,8 +26,7 @@ func ServeMuxResponseHandler(ctx context.Context, info *ng.ResponseInfo) error {
 
 func ServeMuxHandler(scopeHandler func() ng.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx, rc := ng.AcquireContext(r.Context())
-		defer rc.Release()
+		ctx, _ := ng.AcquireContext(r.Context())
 
 		// store in context
 		ng.Store(ctx, w)
