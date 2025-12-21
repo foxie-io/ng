@@ -1,0 +1,290 @@
+definitions:
+  dtos.CreateOrderRequest:
+    properties:
+      product:
+        type: string
+      quantity:
+        type: integer
+      userId:
+        type: integer
+    required:
+    - product
+    - quantity
+    - userId
+    type: object
+  dtos.CreateOrderResponse:
+    properties:
+      id:
+        type: integer
+      product:
+        type: string
+      quantity:
+        type: integer
+      userId:
+        type: integer
+    type: object
+  dtos.DeleteOrderResponse:
+    properties:
+      success:
+        type: boolean
+    type: object
+  dtos.GetAllOrdersResponse:
+    properties:
+      orders:
+        items:
+          $ref: '#/definitions/dtos.GetOrderResponse'
+        type: array
+    type: object
+  dtos.GetOrderResponse:
+    properties:
+      id:
+        type: integer
+      product:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  dtos.UpdateOrderRequest:
+    properties:
+      product:
+        type: string
+      quantity:
+        type: integer
+    required:
+    - product
+    - quantity
+    type: object
+  dtos.UpdateOrderResponse:
+    properties:
+      id:
+        type: integer
+      product:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  nghttp.Code:
+    enum:
+    - OK
+    - INVALID_ARGUMENT
+    - BAD_REQUEST
+    - NOT_FOUND
+    - ALREADY_EXISTS
+    - PERMISSION_DENIED
+    - UNAUTHENTICATED
+    - FAILED_PRECONDITION
+    - OUT_OF_RANGE
+    - ABORTED
+    - CANCELED
+    - RESOURCE_EXHAUSTED
+    - TOO_MANY_REQUESTS
+    - UNKNOWN
+    - DEADLINE_EXCEEDED
+    - UNIMPLEMENTED
+    - INTERNAL
+    - UNAVAILABLE
+    - DATA_LOSS
+    type: string
+    x-enum-varnames:
+    - CodeOk
+    - CodeInvalidArgument
+    - CodeBadRequest
+    - CodeNotFound
+    - CodeAlreadyExists
+    - CodePermissionDenied
+    - CodeUnauthenticated
+    - CodeFailedPrecondition
+    - CodeOutOfRange
+    - CodeAborted
+    - CodeCanceled
+    - CodeResourceExhausted
+    - CodeTooManyRequests
+    - CodeUnknown
+    - CodeDeadlineExceeded
+    - CodeUnimplemented
+    - CodeInternal
+    - CodeUnavailable
+    - CodeDataLoss
+  nghttp.Response:
+    properties:
+      code:
+        allOf:
+        - $ref: '#/definitions/nghttp.Code'
+        description: public info will expose to client as json
+      data:
+        description: wanted info
+      message:
+        description: summary description
+        type: string
+      meta:
+        additionalProperties: {}
+        description: description
+        type: object
+    type: object
+info:
+  contact: {}
+paths:
+  /orders:
+    get:
+      consumes:
+      - application/json
+      operationId: get-all-orders
+      parameters:
+      - default: 1
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - default: 10
+        in: query
+        maximum: 100
+        minimum: 1
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/nghttp.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dtos.GetAllOrdersResponse'
+                  type: array
+              type: object
+      summary: Get all orders
+      tags:
+      - Orders
+    post:
+      consumes:
+      - application/json
+      operationId: order-create
+      parameters:
+      - description: Create Order Request
+        in: body
+        name: state
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/nghttp.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dtos.CreateOrderResponse'
+              type: object
+      summary: Order create
+      tags:
+      - Orders
+  /orders/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/nghttp.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dtos.DeleteOrderResponse'
+              type: object
+        "404":
+          description: NOT_FOUND
+          schema:
+            $ref: '#/definitions/nghttp.Response'
+      summary: Delete an order
+      tags:
+      - Orders
+    get:
+      consumes:
+      - application/json
+      operationId: get-orders
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/nghttp.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dtos.GetOrderResponse'
+              type: object
+        "404":
+          description: NOT_FOUND
+          schema:
+            $ref: '#/definitions/nghttp.Response'
+      summary: GetOrder orders
+      tags:
+      - Orders
+    put:
+      consumes:
+      - application/json
+      operationId: update-order
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Order Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.UpdateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/nghttp.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dtos.UpdateOrderResponse'
+              type: object
+        "404":
+          description: NOT_FOUND
+          schema:
+            $ref: '#/definitions/nghttp.Response'
+      summary: Update an order
+      tags:
+      - Orders
+  /stats:
+    get:
+      description: Provides runtime statistics such as uptime and other metrics.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/nghttp.Response'
+      summary: Retrieve application statistics
+      tags:
+      - stats
+swagger: "2.0"
