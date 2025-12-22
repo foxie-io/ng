@@ -3,9 +3,9 @@ package orders
 import (
 	"context"
 	"errors"
-	"example/advance/components/orders/dtos"
-	"example/advance/dal"
-	"example/advance/models"
+	"example/advanced/components/orders/dtos"
+	"example/advanced/dal"
+	"example/advanced/models"
 
 	"github.com/foxie-io/gormqs"
 	nghttp "github.com/foxie-io/ng/http"

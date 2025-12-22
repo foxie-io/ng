@@ -2,28 +2,30 @@ package adapter
 
 import (
 	"context"
-	"log"
-	"net/http"
+	"fmt"
 
 	"github.com/foxie-io/ng"
+	nghttp "github.com/foxie-io/ng/http"
 	"github.com/gofiber/fiber/v2"
 )
 
-func FiberResponseHandler(ctx context.Context, info *ng.ResponseInfo) error {
+func FiberResponseHandler(ctx context.Context, info nghttp.HttpResponse) error {
 	fctx := ng.MustLoad[*fiber.Ctx](ctx)
 
-	if info.HttpResponse != nil {
-		return fctx.Status(info.HttpResponse.StatusCode()).JSON(info.HttpResponse.Response())
+	if res, ok := info.(*nghttp.Response); ok {
+		if res.Code == nghttp.CodeUnknown {
+			raw, _ := res.GetMetadata("raw")
+			res.Update(nghttp.Meta("error", fmt.Sprintf("%v", raw)))
+		}
 	}
 
-	log.Printf("no http response found in response info: raw:%v, stacks:%v", info.Raw, string(info.Stack))
-	status := http.StatusInternalServerError
-	return fctx.Status(status).SendString(http.StatusText(status))
+	return fctx.Status(info.StatusCode()).JSON(info.Response())
 }
 
 func FiberHandler(scopeHandler func() ng.Handler) fiber.Handler {
 	return func(fctx *fiber.Ctx) error {
-		ctx, _ := ng.AcquireContext(fctx.Context())
+		ctx, rc := ng.NewContext(fctx.Context())
+		defer rc.Clear()
 
 		// store fiber context
 		ng.Store(ctx, fctx)

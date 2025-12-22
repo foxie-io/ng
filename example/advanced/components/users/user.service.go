@@ -3,9 +3,9 @@ package users
 import (
 	"context"
 	"errors"
-	"example/advance/components/users/dtos"
-	"example/advance/dal"
-	"example/advance/models"
+	"example/advanced/components/users/dtos"
+	"example/advanced/dal"
+	"example/advanced/models"
 	"sync"
 
 	"github.com/foxie-io/gormqs"

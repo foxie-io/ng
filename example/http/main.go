@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/foxie-io/ng"
@@ -38,6 +39,8 @@ func main() {
 
 	ngadapter.ServeMuxRegisterRoutes(app, mux)
 
+	fmt.Println("Started server on :8080")
+	fmt.Println("curl http://localhost:8080/hello")
 	http.ListenAndServe(":8080", mux)
 
 	// curl http://localhost:8080/hello

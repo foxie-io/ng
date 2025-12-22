@@ -1,0 +1,12 @@
+go 1.25.2
+
+use (
+	./advanced
+	./basic
+	./chi
+	./fiber
+	./gin
+	./http
+)
+
+replace github.com/foxie-io/ng => ../..

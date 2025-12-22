@@ -1,8 +1,8 @@
 package router
 
 import (
-	"example/advance/adapter"
-	"example/advance/docs"
+	"example/advanced/adapter"
+	"example/advanced/docs"
 
 	"github.com/foxie-io/ng"
 	"github.com/labstack/echo/v4"

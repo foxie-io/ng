@@ -2,26 +2,30 @@ package adapter
 
 import (
 	"context"
-	"net/http"
+	"fmt"
 
 	"github.com/foxie-io/ng"
+	nghttp "github.com/foxie-io/ng/http"
 	"github.com/gin-gonic/gin"
 )
 
-func GinResponseHandler(ctx context.Context, info *ng.ResponseInfo) error {
+func GinResponseHandler(ctx context.Context, info nghttp.HttpResponse) error {
 	ginctx := ng.MustLoad[*gin.Context](ctx)
-	if info.HttpResponse != nil {
-		ginctx.JSON(info.HttpResponse.StatusCode(), info.HttpResponse.Response())
-		return nil
+
+	if res, ok := info.(*nghttp.Response); ok {
+		if res.Code == nghttp.CodeUnknown {
+			raw, _ := res.GetMetadata("raw")
+			res.Update(nghttp.Meta("error", fmt.Sprintf("%v", raw)))
+		}
 	}
 
-	ginctx.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+	ginctx.JSON(info.StatusCode(), info.Response())
 	return nil
 }
 
 func GinHandler(scopeHandler func() ng.Handler) gin.HandlerFunc {
 	return func(gctx *gin.Context) {
-		ctx, _ := ng.AcquireContext(gctx.Request.Context())
+		ctx, _ := ng.NewContext(gctx.Request.Context())
 
 		// Store Gin context in NG context
 		ng.Store(ctx, gctx)

@@ -1,6 +1,2 @@
-github.com/foxie-io/ng v0.0.3 h1:HFfUhIsV8CS82bUuNe+tAJyOZbzMU1jF+6K8c/1KCVU=
-github.com/foxie-io/ng v0.0.3/go.mod h1:pzg+YKRqJ+GROQHaW+U2f455mhEB+gdi9GyoRMmrD78=
-github.com/go-chi/chi/v5 v5.0.8 h1:lD+NLqFcAi1ovnVZpsnObHGW4xb4J8lNmoYVfECH1Y0=
-github.com/go-chi/chi/v5 v5.0.8/go.mod h1:DslCQbL2OYiznFReuXYUmQ2hGd1aDpCnlMNITLSKoi8=
 github.com/go-chi/chi/v5 v5.2.3 h1:WQIt9uxdsAbgIYgid+BpYc+liqQZGMHRaUwp0JUcvdE=
 github.com/go-chi/chi/v5 v5.2.3/go.mod h1:L2yAIGWB3H+phAw1NxKwWM+7eUH/lU8pOMm5hHcoops=

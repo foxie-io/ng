@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"example/advance/adapter"
-	"example/advance/components/orders"
-	"example/advance/components/users"
-	"example/advance/dal"
-	"example/advance/models"
-	"example/advance/router"
+	"example/advanced/adapter"
+	"example/advanced/components/orders"
+	"example/advanced/components/users"
+	"example/advanced/dal"
+	"example/advanced/models"
+	"example/advanced/router"
 
 	"github.com/foxie-io/ng"
 	"github.com/labstack/echo/v4"

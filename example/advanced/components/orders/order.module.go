@@ -1,7 +1,7 @@
 package orders
 
 import (
-	"example/advance/router"
+	"example/advanced/router"
 
 	"go.uber.org/fx"
 )

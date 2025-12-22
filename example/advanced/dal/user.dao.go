@@ -4,7 +4,7 @@ package dal
 
 import (
 	"context"
-	"example/advance/models"
+	"example/advanced/models"
 
 	"github.com/foxie-io/gormqs"
 	"gorm.io/gorm"

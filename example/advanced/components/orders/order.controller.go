@@ -2,8 +2,8 @@ package orders
 
 import (
 	"context"
-	"example/advance/adapter/reqs"
-	"example/advance/components/orders/dtos"
+	"example/advanced/adapter/reqs"
+	"example/advanced/components/orders/dtos"
 
 	"net/http"
 
