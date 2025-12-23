@@ -20,6 +20,9 @@ const (
 
 type ResponseHandler func(ctx context.Context, resp nghttp.HttpResponse) error
 
+// convert any value to http response interface
+type ValueHandler func(ctx context.Context, val any) nghttp.HttpResponse
+
 type (
 	Core interface {
 		Prefix() string
@@ -57,6 +60,8 @@ type (
 		built atomic.Bool
 
 		responseHandler ResponseHandler
+
+		valueHandler ValueHandler
 	}
 )
 
@@ -127,6 +132,16 @@ func (c *core) buildMiddlewareChain(routeHandler Handler) Handler {
 	return next
 }
 
+func (c *core) buildPreExecuteHandler(next Handler) Handler {
+	return func(ctx context.Context) error {
+		if err := c.applyPreExecutes(ctx); err != nil {
+			return err
+		}
+
+		return next(ctx)
+	}
+}
+
 func (c *core) buildInterceptorChain(routeHandler Handler) Handler {
 	next := routeHandler
 
@@ -191,7 +206,56 @@ func WithMetadata(pairs ...any) Option {
 	}
 }
 
-// WithResponseHandler sets a custom response handler for the core
+/*
+WithValueHandler execute before ResponseHandler
+
+here is default implementation, you can override it with your own logic using WithValueHandler option
+
+	var DefaultValueHandler ValueHandler = func(ctx context.Context, val any) nghttp.HttpResponse {
+		switch t := val.(type) {
+		case nghttp.HttpResponse:
+			return t
+		default:
+			return nghttp.NewPanicError(val)
+		}
+	}
+*/
+func WithValueHandler(handler ValueHandler) Option {
+	return func(c *config) {
+		c.core.valueHandler = handler
+	}
+}
+
+// WithResponseHandler a final response handler to convert http response to client response
+/*
+example usage:
+
+// http.serveMux response handler
+func muxResponseHandler(ctx context.Context, info nghttp.HttpResponse) error {
+	var value []byte
+
+	switch v := info.(type) {
+	case *nghttp.Response:
+		value, _ = json.Marshal(v.Response())
+
+	case *nghttp.PanicError:
+		fmt.Println("recieve (*nghttp.PanicError)", v.Value())
+		value, _ = json.Marshal(info.Response())
+
+	case *nghttp.RawResponse:
+		value = v.Value()
+
+	default:
+		fmt.Println("unknown in response", info.Response())
+		value = []byte("unknown in response value")
+	}
+
+	w := ng.MustLoad[http.ResponseWriter](ctx)
+	w.WriteHeader(info.StatusCode())
+	_, _ = w.Write(value)
+	return nil
+}
+*/
 func WithResponseHandler(handler ResponseHandler) Option {
 	return func(c *config) {
 		c.core.responseHandler = handler

@@ -2,8 +2,34 @@ package nghttp
 
 import "fmt"
 
+var _ interface {
+	error
+	HttpResponse
+} = (*Response)(nil)
+
 type (
+
+	/*
+		Option is used to customize Response
+			// example usage of translator
+			func WithTranslator(t Translator) Option {
+				return WithMetadata("translator", t)
+			}
+
+			tranformResponse := func(resp HttpResponse) HttpResponse {
+				if r,ok := resp.(*Response); ok {
+					t,ok := r.GetMetadata("translator").(Translator)
+					if ok && t != nil {
+						msg := t.Translate(r.Code)
+						r.Update(WithMessage(msg))
+					}
+				}
+				return resp
+			}
+	*/
 	Option func(r *Response)
+
+	// Response implementation of HttpResponse
 
 	Response struct {
 		// http status
@@ -38,13 +64,13 @@ func (r *Response) Error() string {
 func (r *Response) StatusCode() int { return r.statusCode }
 func (r *Response) Response() any   { return r }
 
-// With will copy then mutate
+// With will return a copy of response with given options applied
 func (r *Response) With(opts ...Option) *Response {
 	copy := *r
 	return copy.Update(opts...)
 }
 
-// Update will mutate instance
+// Update will mutate the response
 func (r *Response) Update(opts ...Option) *Response {
 	for _, o := range opts {
 		o(r)
@@ -52,6 +78,7 @@ func (r *Response) Update(opts ...Option) *Response {
 	return r
 }
 
+// GetMetadata get internal metadata by key
 func (r *Response) GetMetadata(key string) (any, bool) {
 	if r.metadata == nil {
 		return nil, false
@@ -60,7 +87,7 @@ func (r *Response) GetMetadata(key string) (any, bool) {
 	return val, ok
 }
 
-// meta is extra data for public info
+// meta info to client
 func Meta(keyvaluse ...any) Option {
 	return func(err *Response) {
 		if len(keyvaluse)%2 != 0 {

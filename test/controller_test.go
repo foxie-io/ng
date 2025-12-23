@@ -2,14 +2,17 @@ package test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"strings"
+	"io"
+	"os"
 
-	"log"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/foxie-io/ng"
+	ngadapter "github.com/foxie-io/ng/adapter"
 	nghttp "github.com/foxie-io/ng/http"
 )
 
@@ -26,96 +29,190 @@ var _ interface {
 	ng.Interceptor
 } = (*Log)(nil)
 
-var whitespace = -1
-
-type Log struct {
-	ng.DefaultID[Log]
-	Level string
-}
-
-func (u Log) Use(ctx context.Context, next ng.Handler) {
-
-	u.logBefore("Middleware before")
-	defer func() {
-		rc := ng.GetContext(ctx)
-		resp := rc.GetResponse()
-
-		u.logAfter("Middleware after:" + fmt.Sprintf("%v", resp != nil))
-	}()
-	next(ctx)
-}
-
-func (u Log) logBefore(name string) {
-	whitespace++
-	w := strings.Repeat("  ", whitespace)
-	log.Println(w, name, u.Level)
-}
-
-func (u Log) logAfter(name string) {
-	whitespace--
-	w := strings.Repeat("  ", whitespace)
-	log.Println(w, name, u.Level)
-}
-
-func (u Log) Intercept(ctx context.Context, next ng.Handler) {
-	u.logBefore("Intercept before")
-	defer func() {
-		rc := ng.GetContext(ctx)
-		resp := rc.GetResponse()
-
-		u.logAfter("Intercept after:" + fmt.Sprintf("%v", resp != nil))
-	}()
-	next(ctx)
-}
-
-func (u Log) Allow(ctx context.Context) error {
-	w := strings.Repeat("  ", whitespace)
-	log.Println(w, "Guard", u.Level)
-	return nil
-}
-
 func (c *UserController) InitializeController() ng.Controller {
 	return ng.NewController(
-		ng.WithPreExecute(
-			func(ctx context.Context) {
-				log.Println("preExecute-Controller")
-			},
-		),
-		ng.WithMiddleware(Log{Level: "C-1"}),
+		ng.WithMiddleware(Log{Level: levelName("CTRL", 1)}),
+		ng.WithInterceptor(Log{Level: levelName("CTRL", 1)}),
+		ng.WithGuards(Log{Level: levelName("CTRL", 1)}),
+	)
+}
+
+func (c *UserController) Ping() ng.Route {
+	return ng.NewRoute(http.MethodGet, "/ping",
+		ng.WithHandler(func(ctx context.Context) error {
+			t := ng.MustLoad[*Tracer](ctx)
+			t.traceForward("Handler", ng.GetContext(ctx).Route().Name())
+			return ng.Respond(ctx, nghttp.NewRawResponse(200, []byte("pong")))
+		}),
 	)
 }
 
 func (c *UserController) Register() ng.Route {
 	return ng.NewRoute(http.MethodPost, "/register",
-		ng.WithMiddleware(Log{Level: "R-1"}, Log{Level: "R-2"}),
-		ng.WithInterceptor(Log{Level: "R-1"}, Log{Level: "R-2"}),
+		ng.WithMiddleware(
+			Log{Level: levelName("ROUTE", 1)},
+		),
+		ng.WithGuards(
+			Log{Level: levelName("ROUTE", 1)},
+		),
+		ng.WithInterceptor(
+			Log{Level: levelName("ROUTE", 1)},
+		),
 		ng.WithHandler(func(ctx context.Context) error {
-			whitespace++
-			w := strings.Repeat("  ", whitespace)
-
-			log.Println(w, "Handler: i am from route ->", ng.GetContext(ctx).Route().Path())
-			return ng.Respond(ctx, nghttp.NewResponse("register is token"))
+			t := ng.MustLoad[*Tracer](ctx)
+			t.traceForward("Handler", ng.GetContext(ctx).Route().Name())
+			return ng.Respond(ctx, nghttp.NewRawResponse(200, []byte("register")))
 		}),
-		ng.SkipAllGuards(),
 	)
 }
 
-func TestController(t *testing.T) {
-	app := ng.NewApp(
-		ng.WithPrefix("/app"),
-		ng.WithMiddleware(Log{Level: "A-1"}),
-		ng.WithGuards(Log{Level: "A-1"}),
-		ng.WithResponseHandler(func(ctx context.Context, val nghttp.HttpResponse) error {
-			rc := ng.GetContext(ctx)
-			log.Println("resp:", rc.Route().Path(), val)
+func (c *UserController) Flow() ng.Route {
+	return ng.NewRoute(http.MethodGet, "/flow",
+		ng.WithMiddleware(
+			Log{Level: levelName("ROUTE", 1)},
+		),
+		ng.WithGuards(
+			Log{Level: levelName("ROUTE", 1)},
+		),
+		ng.WithInterceptor(
+			Log{Level: levelName("ROUTE", 1)},
+		),
+		ng.WithHandler(func(ctx context.Context) error {
+			t := ng.MustLoad[*Tracer](ctx)
+			t.traceForward("Handler", ng.GetContext(ctx).Route().Name())
+			return ng.Respond(ctx, nghttp.NewRawResponse(200, []byte("flow")))
+		}),
+	)
+}
+
+func (c *UserController) Trace() ng.Route {
+	return ng.NewRoute(http.MethodGet, "/trace",
+		ng.WithMiddleware(
+			Log{Level: levelName("ROUTE", 1)},
+		),
+		ng.WithGuards(
+			Log{Level: levelName("ROUTE", 2)},
+		),
+		ng.WithInterceptor(
+			Log{Level: levelName("ROUTE", 3)},
+		),
+		ng.WithHandler(func(ctx context.Context) error {
+			t := ng.MustLoad[*Tracer](ctx)
+			t.traceForward("Handler", ng.GetContext(ctx).Route().Name())
+			return ng.Respond(ctx, nghttp.NewRawResponse(200, []byte("trace")))
+		}),
+		ng.WithResponseHandler(func(ctx context.Context, info nghttp.HttpResponse) error {
+			str := ng.MustLoad[*Tracer](ctx).Tree()
+
+			w := ng.MustLoad[http.ResponseWriter](ctx)
+			w.WriteHeader(info.StatusCode())
+			_, _ = w.Write([]byte(str))
 			return nil
 		}),
 	)
+}
 
-	app.AddController(&UserController{})
-	ctx := context.Background()
+func levelName(prefix string, level int) string {
+	return fmt.Sprintf("%s-%d", prefix, level)
+}
 
-	for _, r := range app.Build().Routes() {
-		r.Handler()(ctx)
+func muxResponseHandler(ctx context.Context, info nghttp.HttpResponse) error {
+	var value []byte
+
+	switch v := info.(type) {
+	case *nghttp.Response:
+		value, _ = json.Marshal(v.Response())
+
+	case *nghttp.PanicError:
+		fmt.Println("recieve (*nghttp.PanicError)", v.Value())
+		value, _ = json.Marshal(info.Response())
+
+	case *nghttp.RawResponse:
+		value = v.Value()
+
+	default:
+		fmt.Println("unknown in response", info.Response())
+		value = []byte("unknown in response value")
 	}
+
+	w := ng.MustLoad[http.ResponseWriter](ctx)
+	w.WriteHeader(info.StatusCode())
+	_, _ = w.Write(value)
+	return nil
+}
+
+func setupApp() (ng.App, *http.ServeMux) {
+	app := ng.NewApp(
+		ng.WithMiddleware(
+			TraceMiddleware{},
+			Log{Level: levelName("APP", 1)},
+			Log{Level: levelName("APP", 2)},
+		),
+		ng.WithGuards(
+			Log{Level: levelName("APP", 1)},
+			Log{Level: levelName("APP", 2)},
+		),
+		ng.WithInterceptor(
+			Log{Level: levelName("APP", 1)},
+			Log{Level: levelName("APP", 2)},
+		),
+		ng.WithResponseHandler(muxResponseHandler),
+	)
+
+	mux := http.NewServeMux()
+	return app, mux
+}
+
+func testMuxtEndpoint(url, method, expectValue string, expectStatus int) func(t *testing.T) {
+	return func(t *testing.T) {
+		req, err := http.NewRequest(method, url, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		body, _ := io.ReadAll(resp.Body)
+		defer resp.Body.Close()
+
+		if resp.StatusCode != expectStatus {
+			t.Fatalf("expected %d, got %d", expectStatus, resp.StatusCode)
+		}
+
+		if string(body) != expectValue {
+			t.Fatalf("expected '%s', got %s", expectValue, string(body))
+		}
+	}
+}
+
+func TestServerMux(t *testing.T) {
+	app, mux := setupApp()
+	app.AddController(&UserController{})
+	app.Build()
+
+	for _, route := range app.Routes() {
+		fmt.Println("[ROUTE]:", route.Method(), route.Path())
+	}
+
+	// Register routes to mux
+	ngadapter.ServeMuxRegisterRoutes(app, mux)
+
+	// Start test server
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	fmt.Println("Test server running at:", server.URL)
+
+	t.Run("endpoint ping", testMuxtEndpoint(server.URL+"/ping", http.MethodGet, "pong", 200))
+	t.Run("endpoint register", testMuxtEndpoint(server.URL+"/register", http.MethodPost, "register", 200))
+	t.Run("endpoint flow", testMuxtEndpoint(server.URL+"/flow", http.MethodGet, "flow", 200))
+
+	traceText, err := os.ReadFile("./trace_output.txt")
+	if err != nil {
+		t.Fatal("failed to read trace output file:", err)
+	}
+
+	t.Run("endpoint trace", testMuxtEndpoint(server.URL+"/trace", http.MethodGet, string(traceText), 200))
 }

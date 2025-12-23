@@ -42,6 +42,7 @@ const (
 	CodeDataLoss         Code = "DATA_LOSS"
 )
 
+// IsClientError reports whether the code represents a client-side error.
 func (c Code) IsClientError() bool {
 	switch c {
 	case CodeInvalidArgument,
@@ -93,52 +94,62 @@ func NewErrInvalidArgument() *Response {
 	return NewError(CodeInvalidArgument, http.StatusBadRequest, "invalid argument")
 }
 
+// Bad request
 func NewErrBadRequest() *Response {
 	return NewError(CodeBadRequest, http.StatusBadRequest, "bad request")
 }
 
+// Not found resource
 func NewErrNotFound() *Response {
 	return NewError(CodeNotFound, http.StatusNotFound, "not found")
 }
 
+// Already exists when attempting to create a resource that already exists
 func NewErrAlreadyExists() *Response {
 	return NewError(CodeAlreadyExists, http.StatusConflict, "already exists")
 }
 
+// Permission denied when the caller does not have permission to execute the specified operation
 func NewErrPermissionDenied() *Response {
 	return NewError(CodePermissionDenied, http.StatusForbidden, "permission denied")
 }
 
+// Unauthenticated when authentication is required and has failed or has not yet been provided
 func NewErrUnauthenticated() *Response {
 	return NewError(CodeUnauthenticated, http.StatusUnauthorized, "unauthenticated")
 }
 
+// Failed precondition when a condition for the operation is not met
 func NewErrFailedPrecondition() *Response {
 	return NewError(CodeFailedPrecondition, http.StatusPreconditionFailed, "failed precondition")
 }
 
+// Out of range when an operation is attempted past the valid range
 func NewErrOutOfRange() *Response {
 	return NewError(CodeOutOfRange, http.StatusBadRequest, "out of range")
 }
 
+// Aborted operation was aborted, typically due to a concurrency issue
 func NewErrAborted() *Response {
 	return NewError(CodeAborted, http.StatusConflict, "aborted")
 }
 
-// Rate & quota
+// Rate & quota when a resource has been exhausted or rate limit exceeded
 func NewErrResourceExhausted() *Response {
 	return NewError(CodeResourceExhausted, http.StatusTooManyRequests, "resource exhausted")
 }
 
+// Too many requests when rate limit is exceeded
 func NewErrTooManyRequests() *Response {
 	return NewError(CodeTooManyRequests, http.StatusTooManyRequests, "too many requests")
 }
 
-// Timeout & availability
+// Timeout & availability when a deadline has been exceeded
 func NewErrDeadlineExceeded() *Response {
 	return NewError(CodeDeadlineExceeded, http.StatusGatewayTimeout, "deadline exceeded")
 }
 
+// Service Unavailable when the service is currently unavailable
 func NewErrUnavailable() *Response {
 	return NewError(CodeUnavailable, http.StatusServiceUnavailable, "unavailable")
 }
@@ -148,10 +159,12 @@ func NewErrInternal() *Response {
 	return NewError(CodeInternal, http.StatusInternalServerError, "internal error")
 }
 
+// Unimplemented feature or method
 func NewErrUnimplemented() *Response {
 	return NewError(CodeUnimplemented, http.StatusNotImplemented, "unimplemented")
 }
 
+// Data loss when unrecoverable data loss or corruption occurs
 func NewErrDataLoss() *Response {
 	return NewError(CodeDataLoss, http.StatusInternalServerError, "data loss")
 }

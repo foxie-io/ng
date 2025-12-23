@@ -1,31 +1,62 @@
 package ng
 
+// Skipper provides a way to conditionally skip middleware, guards, or interceptors
+// during request execution.
+//
+// By implementing the Skipper interface and returning a unique NgID,
+// components can be identified for skipping based on route or handler metadata.
+//
+// This is useful for scenarios such as:
+//   - Bypassing authentication guards for public endpoints
+//   - Skipping logging middleware for health check routes
+//   - Omitting response transformation interceptors for specific handlers
+/// Example:
+/*
+type AuthGuard struct {
+	// ...
+}
+
+func (ag *AuthGuard) NgID() string {
+	return "auth_guard"
+}
+
+func (ag *AuthGuard) Allow(ctx context.Context) error {
+	// guard logic
+}
+*/
+
 import (
 	"context"
 	"fmt"
 )
 
 type (
-	// ID identifies a component (middleware, guard, interceptor)
-	// that can be conditionally skipped during request execution.
-	//
-	// The ID must be stable and unique for the component type.
+	// ID represents a unique identifier for skippable components.
 	ID interface {
 		NgID() string
 	}
 
-	// skipperKey is an internal metadata key used to store skipper IDs
-	// at the route or handler level.
+	// skipperKey is used as a metadata key for storing skipper IDs.
 	skipperKey struct{}
 
-	// DefaultID allows skipping middleware, guards, or interceptors
-	// by their concrete type.
-	//
-	// Example:
-	//
-	//	ng.WithSkipper(ng.DefaultID[AuthGuard]{})
-	//
-	// This will prevent AuthGuard from executing for the configured route.
+	// DefaultID is a generic implementation of the ID interface.
+	// example:
+	/*
+		// allow guard to be skipped by using DefaultID[type]
+		type AuthGuard struct{
+			DefaultID[AuthSkipper]
+		}
+
+		// allow middleware to be skipped by using DefaultID[type]
+		type LoggingMiddleware struct{
+			DefaultID[LoggingSkipper]
+		}
+
+		// allow interceptor to be skipped by using DefaultID[type]
+		type ResponseInterceptor struct{
+			DefaultID[ResponseSkipper]
+		}
+	*/
 	DefaultID[T any] struct{}
 )
 
@@ -34,11 +65,8 @@ func (s DefaultID[T]) NgID() string {
 	return fmt.Sprintf("skipper_%T", s)
 }
 
-// WithSkip attaches skipper metadata to a route or handler.
-//
-// Any middleware, guard, or interceptor implementing Skipper
-// whose SkipID matches one of the provided skippers will be skipped
-// during request execution.
+// WithSkip can be used in app, controller, route to skip certain skippable components.
+// For example, to skip certain guards, middlewares, or interceptors.
 func WithSkip(skippers ...ID) Option {
 	skipIds := make([]string, len(skippers))
 	for i := range skippers {

@@ -57,9 +57,11 @@ func NewRoute(method string, path string, opt HandlerOption, opts ...Option) Rou
 func (r *route) addPreCore(preCores ...Core) Route {
 	var (
 		responseHander ResponseHandler
+		valueHandler   ValueHandler
 		preExcutes     = []PreHandler{}
-		guards         = []Guard{}
 		middlewares    = []Middleware{}
+		guards         = []Guard{}
+		interceptors   = []Interceptor{}
 		prefix         string
 	)
 
@@ -71,9 +73,10 @@ func (r *route) addPreCore(preCores ...Core) Route {
 		core := c.(*core)
 		prefix += c.Prefix()
 
-		guards = append(guards, core.guards...)
-		middlewares = append(middlewares, core.middlewares...)
 		preExcutes = append(preExcutes, core.preExecutes...)
+		middlewares = append(middlewares, core.middlewares...)
+		guards = append(guards, core.guards...)
+		interceptors = append(interceptors, core.interceptors...)
 
 		// merge metadata
 		core.metadata.Range(func(key, value any) bool {
@@ -84,14 +87,24 @@ func (r *route) addPreCore(preCores ...Core) Route {
 		if core.responseHandler != nil {
 			responseHander = core.responseHandler
 		}
+
+		if core.valueHandler != nil {
+			valueHandler = core.valueHandler
+		}
 	}
 
 	// final route info
 	r.path = prefix + r.path
+
+	// final handlers
 	r.core.responseHandler = responseHander
+	r.core.valueHandler = valueHandler
+
+	// final middlewares
 	r.core.preExecutes = preExcutes
-	r.core.guards = guards
 	r.core.middlewares = middlewares
+	r.core.guards = guards
+	r.core.interceptors = interceptors
 	return r
 }
 
@@ -104,13 +117,18 @@ func (r *route) build() {
 	r.core.built.Store(true)
 }
 
-func (r *route) buildResponseHandler() ResponseHandler {
+func (r *route) buildResponseHandler() (ValueHandler, ResponseHandler) {
 	responseHandler := r.core.responseHandler
 	if responseHandler == nil {
 		panic("response handler is not defined, WithResponseHandler is required")
 	}
 
-	return responseHandler
+	valueHandler := DefaultValueHandler
+	if r.core.valueHandler != nil {
+		valueHandler = r.core.valueHandler
+	}
+
+	return valueHandler, responseHandler
 }
 
 func (r *route) buildHandler() Handler {
@@ -118,11 +136,14 @@ func (r *route) buildHandler() Handler {
 	return handler
 }
 
-func (r *route) withSavedResponseState(next Handler) Handler {
+func (r *route) withSavedResponseState(tranformValue ValueHandler, next Handler) Handler {
 	return func(ctx context.Context) error {
 		defer func() {
 			if r := recover(); r != nil {
-				setResponseAny(GetContext(ctx), r)
+				httpResp := tranformValue(ctx, r)
+				if httpResp != nil {
+					GetContext(ctx).SetResponse(httpResp)
+				}
 			}
 		}()
 
@@ -134,23 +155,41 @@ func (r *route) withSavedResponseState(next Handler) Handler {
 	}
 }
 
+/*
+	DefaultValueHandler default value handler implementation
+
+if the value is nil, return empty response (*nghttp.Response)
+if the value is of type nghttp.HttpResponse, return it directly
+otherwise, return error response with code ErrUnknown and raw value in metadata("raw")
+*/
+var DefaultValueHandler ValueHandler = func(ctx context.Context, val any) nghttp.HttpResponse {
+	switch t := val.(type) {
+	case nghttp.HttpResponse:
+		return t
+	default:
+		return nghttp.NewPanicError(val)
+	}
+}
+
 // prexecute -> middleware -> guard -> interceptor -> route handler -> response handler
 func (r *route) buildRequestFlow() Handler {
+	// last execution: response handler
+	tranformResponse, finalResponse := r.buildResponseHandler()
 
 	// route handler with response capture
-	routeHandler := r.withSavedResponseState(r.buildHandler())
+	routeHandler := r.withSavedResponseState(tranformResponse, r.buildHandler())
 
 	// interceptor around route handler
-	interceptorChain := r.withSavedResponseState(r.core.buildInterceptorChain(routeHandler))
+	interceptorChain := r.core.buildInterceptorChain(routeHandler)
 
 	// guard before interceptor
-	guardChain := r.withSavedResponseState(r.core.buildGuardChain(interceptorChain))
+	guardChain := r.withSavedResponseState(tranformResponse, r.core.buildGuardChain(interceptorChain))
 
 	// middleware around guard
 	middlewareChain := r.core.buildMiddlewareChain(guardChain)
 
-	// last execution: response handler
-	final := r.buildResponseHandler()
+	// preExecute before middleware
+	execute := r.withSavedResponseState(tranformResponse, r.core.buildPreExecuteHandler(middlewareChain))
 
 	return func(ctx context.Context) (err error) {
 		ctx, rc, created := acquireContext(ctx)
@@ -160,24 +199,13 @@ func (r *route) buildRequestFlow() Handler {
 
 		defer func() {
 			// final response handling
-			httpResp := nghttp.WrapResponse(rc.GetResponse())
-			err = final(ctx, httpResp)
+			val := rc.GetResponse()
+			httpResp := tranformResponse(ctx, val)
+			err = finalResponse(ctx, httpResp)
 		}()
 
-		defer func() {
-			// 3 capture panic to response
-			if r := recover(); r != nil {
-				setResponseAny(rc, r)
-			}
-		}()
-
-		// 1 pre executes before everything
-		if err := r.core.applyPreExecutes(ctx); err != nil {
-			return err
-		}
-
-		// 2 middleware -> guard -> interceptor -> route handler
-		if err := middlewareChain(ctx); err != nil {
+		// 1 preExecute-> middleware -> guard -> interceptor -> route handler
+		if err := execute(ctx); err != nil {
 			panic(err)
 		}
 

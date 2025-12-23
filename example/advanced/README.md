@@ -51,13 +51,13 @@ example/advance/
 
 This example requires the following dependencies:
 
-- `github.com/foxie-io/ng v0.0.3`: The core NG framework for building modular Go applications.
+- `github.com/foxie-io/ng v0.3.0`: The core NG framework for building modular Go applications.
+- `github.com/foxie-io/gormqs`: A library for simple query building and execution with GORM.
 - `go.uber.org/fx v1.24.0`: A dependency injection framework for Go.
 - `gorm.io/gorm v1.31.1`: An ORM library for Go.
 - `github.com/labstack/echo/v4 v4.14.0`: A high-performance, extensible, and minimalist Go web framework.
 - `github.com/swaggo/swag v1.16.6`: A library for generating Swagger documentation for Go applications.
-- `github.com/MarceloPetrucio/go-scalar-api-reference`: A reference library for scalar APIs in Go.
-- `github.com/foxie-io/gormqs`: A library for simple query building and execution with GORM.
+- `github.com/MarceloPetrucio/go-scalar-api-reference`: API client UI from generated Swagger documentation.
 
 ## Features Demonstrated
 

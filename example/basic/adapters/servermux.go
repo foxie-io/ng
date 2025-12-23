@@ -44,6 +44,8 @@ func ServeMuxHandler(scopeHandler func() ng.Handler) http.HandlerFunc {
 
 func ServeMuxRegisterRoutes(ng ng.App, mux *http.ServeMux) {
 	for _, route := range ng.Routes() {
-		mux.HandleFunc(route.Path(), ServeMuxHandler(route.Handler))
+		// GET /path format
+		muxPath := fmt.Sprintf("%s %s", route.Method(), route.Path())
+		mux.HandleFunc(muxPath, ServeMuxHandler(route.Handler))
 	}
 }

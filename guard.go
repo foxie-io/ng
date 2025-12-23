@@ -2,44 +2,21 @@ package ng
 
 import "context"
 
-// Guard is responsible for access control.
+// Guard is used to determine if a request is allowed to proceed.
+// Guards are typically used for authorization and access control.
 //
-// Guards are executed after middleware and before interceptors.
-// If Allow returns an error, the request handling is aborted.
+// If a guard denies access, it should return an error indicating the reason for denial.
+// If access is allowed, it should return nil.
 /*
-type AdminGuard {
-	bypassRole string
+type RoleGuard struct {
+	RequiredRole string
 }
 
-func NewAdminGuard(bypassRole) {
-	return &AdminGuard{
-		bypassRole: bypassRole,
-	}
-}
-
-func (ag *AdminGuard) Allow(ctx context.Context) error {
-	reqctx := ng.GetContext(ctx)
-	route := reqctx.Route()
-	// when route or controller use mg.WithMetadata("__bypass_admin_guard__", struct{}{})
-	if _, isBypassExists := route.Core().Metadata("__bypass_admin_guard__"); isBypassExists {
+func (rg *RoleGuard) Allow(ctx context.Context) error {
+	user := ng.MustLoad[User](ctx)
+	if !user.HasRole(rg.RequiredRole) {
 		return nghttp.NewErrPermissionDenied()
 	}
-
-
-	user, exists := ng.Load[User](ctx)
-	if !exists {
-		return nghttp.NewErrPermissionDenied()
-	}
-
-	if ag.bypassRole == "super" {
-		return nil
-	}
-
-	if user.role != "admin" {
-		return nghttp.NewErrPermissionDenied()
-	}
-
-	// allowed
 	return nil
 }
 */

@@ -220,35 +220,12 @@ echoHttp.Start(":8081")
 
 ---
 
-## Example Project Structure
-
-```
-example/
-  basic/
-    main.go
-    adapters/
-      echo.go
-      fiber.go
-      mux.go
-    middlewares/
-      debug.go
-      stats.go
-      limiter/
-        ratelimit.go
-    components/
-      orders/
-        order.app.go
-        order.controller.go
-      users/
-        user.app.go
-        user.controller.go
-```
-
-### Examples Directory
+## Examples Directory
 
 The `examples` directory contains various subdirectories showcasing how to use the NG framework with different setups and configurations. Below is a list of available examples:
 
 - **basic/**: A simple example demonstrating the core features of the NG framework, including middleware, controllers, and adapters.
+- **advance/**: An advanced example with a more complex project structure, demonstrating controllers, middleware, guards, interceptors, adapters, data access layers, models, DTOs, and Swagger documentation.
 - **chi/**: Example using the `chi` router as the HTTP adapter.
 - **fiber/**: Example using the `fiber` framework as the HTTP adapter.
 - **fx/**: Example integrating NG with the `fx` dependency injection framework.
@@ -256,140 +233,6 @@ The `examples` directory contains various subdirectories showcasing how to use t
 - **http/**: Example using the standard `http.ServeMux` as the HTTP adapter.
 
 Each example contains its own `main.go` file and supporting components, middleware, and adapters. Navigate to the respective directories to explore the code and learn how to integrate NG into your projects.
-
----
-
-## Project Structure
-
-The project is organized as follows:
-
-```
-.
-├── app.go
-├── config.go
-├── context.go
-├── controller.go
-├── core.go
-├── go.mod
-├── go.sum
-├── handler.go
-├── interface.go
-├── LICENSE
-├── README.md
-├── response.go
-├── route.go
-├── skipper.go
-├── util.go
-├── adapter/
-│   └── servermux.go
-├── docs/
-│   └── framework.md
-├── example/
-│   ├── advance/
-│   │   ├── go.mod
-│   │   ├── go.sum
-│   │   ├── main.go
-│   │   ├── Makefile
-│   │   ├── README.md
-│   │   ├── adapter/
-│   │   │   ├── echo.go
-│   │   │   ├── stats.go
-│   │   │   └── reqs/
-│   │   │       ├── binder.go
-│   │   │       └── validator.go
-│   │   ├── components/
-│   │   │   ├── orders/
-│   │   │   │   ├── order.controller.go
-│   │   │   │   ├── order.module.go
-│   │   │   │   ├── order.service.go
-│   │   │   │   └── dtos/
-│   │   │   │       ├── order.request.go
-│   │   │   │       └── order.response.go
-│   │   │   └── users/
-│   │   │       ├── user.controller.go
-│   │   │       ├── user.module.go
-│   │   │       ├── user.service.go
-│   │   │       └── dtos/
-│   │   │           ├── user.request.go
-│   │   │           └── user.response.go
-│   │   ├── dal/
-│   │   │   ├── order.dao.go
-│   │   │   └── user.dao.go
-│   │   ├── docs/
-│   │   │   ├── docs.go
-│   │   │   ├── swagger.json
-│   │   │   └── swagger.yaml
-│   │   ├── models/
-│   │   │   ├── order.model.go
-│   │   │   └── user.model.go
-│   │   └── router/
-│   │       ├── grouper.go
-│   │       ├── router.go
-│   │       └── swagger.go
-│   ├── basic/
-│   │   ├── go.mod
-│   │   ├── go.sum
-│   │   ├── main.go
-│   │   ├── adapters/
-│   │   │   ├── dynamic.go
-│   │   │   ├── echo.go
-│   │   │   ├── fiber.go
-│   │   │   └── servermux.go
-│   │   ├── components/
-│   │   │   ├── orders/
-│   │   │   │   ├── order.app.go
-│   │   │   │   └── order.controller.go
-│   │   │   └── users/
-│   │   │       ├── user.app.go
-│   │   │       └── user.controller.go
-│   │   └── middlewares/
-│   │       ├── debug.go
-│   │       ├── stats.go
-│   │       └── limiter/
-│   │           ├── limiter.go
-│   │           └── option.go
-│   ├── chi/
-│   │   ├── go.mod
-│   │   ├── go.sum
-│   │   ├── main.go
-│   │   └── adapter/
-│   │       └── chi.go
-│   ├── fiber/
-│   │   ├── go.mod
-│   │   ├── go.sum
-│   │   ├── main.go
-│   │   └── adapter/
-│   │       └── fiber.go
-│   ├── gin/
-│   │   ├── go.mod
-│   │   ├── go.sum
-│   │   ├── main.go
-│   │   └── adapter/
-│   │       └── gin.go
-│   └── http/
-│       ├── go.mod
-│       ├── go.sum
-│       ├── main.go
-│       └── README.md
-├── http/
-│   ├── error.go
-│   ├── http.go
-│   └── response.go
-└── test/
-    ├── context_test.go
-    └── controller_test.go
-```
-
-### Key Directories
-
-- **adapter/**: Contains server adapter implementations.
-- **docs/**: Documentation files for the framework.
-- **example/**: Example projects demonstrating various use cases of the framework.
-  - **advance/**: Advanced example with complex project structure.
-  - **basic/**: Basic example showcasing core features.
-  - **chi/**, **fiber/**, **gin/**, **http/**: Examples using different HTTP frameworks.
-- **http/**: HTTP-related utilities and response handling.
-- **test/**: Unit tests for the framework.
 
 ---
 
@@ -412,9 +255,9 @@ Guards enforce rules such as rate limiting, role guards. They are executed after
 Interceptors allow you to modify requests before they reach the handler and responses after they are processed by the handler. They are useful for tasks like logging, transforming data, or adding headers.
 it executed after guards and before the handler.
 
-### Adapters
+### Metadata
 
-Adapters allow NG to work with multiple HTTP frameworks. Supported frameworks include `echo`, `fiber`,`http.ServeMux` and `any http framwork`.
+Metadata allows you to attach additional information to routes, controllers, and other components. This pattern is inspired by NestJS and provides a flexible way to modify behavior of middleware,guards, interceptors dynamically based on metadata.
 
 ---
 
@@ -668,6 +511,8 @@ func AdminGuard(ctx context.Context) error {
 
 - Use `ng.Store` to attach values to the context.
 - Use `ng.Load` to retrieve values from the context.
+- Use `ng.MustLoad` when you are certain the value exists, which will panic if it does not.
+- Use `ng.LoadOrStore` to retrieve a value or store a default if it does not exist.
 - These utilities help maintain clean and modular code by avoiding global variables and passing data explicitly through the context.
 
 ---

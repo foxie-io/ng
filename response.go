@@ -1,5 +1,7 @@
 package ng
 
+// Response handling utilities
+
 import (
 	"context"
 	"errors"
@@ -14,8 +16,7 @@ func ThrowResponse(response nghttp.HttpResponse) {
 
 // ThowAny throws any value as an HTTP response
 func ThrowAny(value any) {
-	httpResp := nghttp.WrapResponse(value)
-	ThrowResponse(httpResp)
+	panic(value)
 }
 
 // Respond sets the HTTP response in the context
@@ -27,15 +28,4 @@ func Respond(ctx context.Context, val nghttp.HttpResponse) error {
 	}
 
 	return errors.New("request context not found, ng.AcquireContext missing?")
-}
-
-// set response value in context
-func setResponseAny(rc Context, val any) {
-	httpResp := nghttp.WrapResponse(val)
-	rc.SetResponse(httpResp)
-}
-
-// RespondAny sets any value as the HTTP response in the context
-func RespondAny(ctx context.Context, val any) {
-	setResponseAny(GetContext(ctx), val)
 }

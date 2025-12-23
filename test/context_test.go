@@ -42,8 +42,8 @@ func TestRequestContextPoolRacing(t *testing.T) {
 
 				id := newId()
 
-				ctx.Store(Key{"id"}, id)
-				val, ok := ctx.Load(Key{"id"})
+				ctx.Storage().Store(Key{"id"}, id)
+				val, ok := ctx.Storage().Load(Key{"id"})
 
 				if !ok {
 					t.Errorf("Expected key to be present, but it was not (goroutine %d, iteration %d)", i, j)
