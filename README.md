@@ -181,7 +181,7 @@ func (c *HealthController) InitializeController() ng.Controller {
 func (c *HealthController) Index() ng.Route {
 	return ng.NewRoute(http.MethodGet, "/",
 		ng.WithHandler(func(ctx context.Context) error {
-			return ng.Respond(ctx, nghttp.NewResponse("I am healthy!"))
+			return ng.Respond(ctx, nghttp.NewRawResponse([]byte("I am healthy!")))
 		}),
 	)
 }
