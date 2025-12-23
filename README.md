@@ -65,15 +65,6 @@ go get github.com/foxie-io/ng
 ### 1. Create a New Application with a Controller
 
 ```go
-package main
-
-import (
-	"context"
-	"github.com/foxie-io/ng"
-	"github.com/foxie-io/ng/http"
-	"net/http"
-)
-
 type HealthController struct {
 	ng.DefaultControllerInitializer
 }
@@ -88,20 +79,24 @@ func (con *HealthController) InitializeController() ng.Controller {
 	)
 }
 
+// curl localhost:8080/health
 func (con *HealthController) Index() ng.Route {
 	return ng.NewRoute(http.MethodGet, "/", ng.WithHandler(func(ctx context.Context) error {
-		return ng.Respond(ctx, http.NewResponse("I am ok!"))
+		return ng.Respond(ctx, nghttp.NewResponse("I am ok!"))
 	}))
 }
 
+// curl localhost:8080/health/db-check
 func (con *HealthController) DBCheck() ng.Route {
 	return ng.NewRoute(http.MethodGet, "/db-check", ng.WithHandler(func(ctx context.Context) error {
-		return ng.Respond(ctx, http.NewResponse("db is ok"))
+		return ng.Respond(ctx, nghttp.NewResponse("db is ok"))
 	}))
 }
 
-func main() {
-	app := ng.NewApp()
+func runApp() {
+	app := ng.NewApp(
+		ng.WithResponseHandler(ngadapter.ServeMuxResponseHandler),
+	)
 
 	// Add the HealthController
 	app.AddController(NewHealthController())
@@ -109,11 +104,11 @@ func main() {
 	// Build and start the application
 	app.Build()
 
-    // Start the HTTP server
-    mux := http.NewServeMux()
-    ngadapter.ServeMuxRegisterRoutes(app, mux)
+	// Start the HTTP server
+	mux := http.NewServeMux()
+	ngadapter.ServeMuxRegisterRoutes(app, mux)
 
-    // Listen and serve
+	// Listen and serve
 	http.ListenAndServe(":8080", mux)
 }
 ```
