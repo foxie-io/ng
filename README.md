@@ -68,8 +68,7 @@ Whether you're building a simple REST API or a complex microservice, NG helps yo
 - 🎯 **Type-Safe Context Management** - Generic-based context storage with `ng.Store` and `ng.Load`
 - 📦 **Modular Design** - Organize code into controllers, services, and modules
 - 🔧 **Metadata System** - Attach configuration and behavior to routes dynamically
-- 🚀 **Production-Ready** - Lightweight, performant, and battle-tested
-- 📚 **Comprehensive Examples** - Learn from basic to advanced use cases
+- **Comprehensive Examples** - Learn from basic to advanced use cases
 
 ---
 
