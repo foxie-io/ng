@@ -5,6 +5,7 @@ import (
 	"errors"
 	"example/advanced/components/orders/dtos"
 	"example/advanced/dal"
+	. "example/advanced/dal/option"
 	"example/advanced/models"
 
 	"github.com/foxie-io/gormqs"
@@ -47,12 +48,9 @@ func (s *OrderService) GetOrder(ctx context.Context, id int) (*dtos.GetOrderResp
 		record dtos.GetOrderResponse
 	)
 
-	err := s.orderDao.GetOneTo(ctx, &record, gormqs.WhereID(id))
+	err := s.orderDao.GetOneTo(ctx, &record, ORDERS.ID.Eq(id))
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nghttp.NewErrNotFound().Update(nghttp.Meta(
-			"entity", "Order",
-			"id", id,
-		))
+		return nil, nghttp.NewErrNotFound().Update(nghttp.Meta("entity", "Order"))
 	}
 
 	if err != nil {
@@ -77,10 +75,7 @@ func (s *OrderService) GetOrders(ctx context.Context, dto *dtos.ListOrdersReques
 func (s *OrderService) UpdateOrder(ctx context.Context, id int, req *dtos.UpdateOrderRequest) (*dtos.UpdateOrderResponse, error) {
 	_, err := s.orderDao.GetOne(ctx, gormqs.WhereID(id), gormqs.Select("id"))
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nghttp.NewErrNotFound().Update(nghttp.Meta(
-			"entity", "Order",
-			"id", id,
-		))
+		return nil, nghttp.NewErrNotFound().Update(nghttp.Meta("entity", "Order"))
 	}
 	if err != nil {
 		return nil, err
@@ -93,8 +88,8 @@ func (s *OrderService) UpdateOrder(ctx context.Context, id int, req *dtos.Update
 	}
 
 	if _, err := s.orderDao.Update(ctx, updatedOrder,
-		gormqs.WhereID(id),
-		gormqs.Select("product", "quantity"),
+		ORDERS.ID.Eq(id),
+		ORDERS.Select(ORDERS.Product, ORDERS.Quantity),
 	); err != nil {
 		return nil, err
 	}
@@ -107,19 +102,16 @@ func (s *OrderService) UpdateOrder(ctx context.Context, id int, req *dtos.Update
 }
 
 func (s *OrderService) DeleteOrder(ctx context.Context, id int) (*dtos.DeleteOrderResponse, error) {
-	_, err := s.orderDao.GetOne(ctx, gormqs.WhereID(id), gormqs.Select("id"))
+	_, err := s.orderDao.GetOne(ctx, ORDERS.ID.Eq(id), ORDERS.Select(ORDERS.ID))
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nghttp.NewErrNotFound().Update(nghttp.Meta(
-			"entity", "Order",
-			"id", id,
-		))
+		return nil, nghttp.NewErrNotFound().Update(nghttp.Meta("entity", "Order"))
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err := s.orderDao.Delete(ctx, gormqs.WhereID(id)); err != nil {
+	if _, err := s.orderDao.Delete(ctx, ORDERS.ID.Eq(id)); err != nil {
 		return nil, err
 	}
 

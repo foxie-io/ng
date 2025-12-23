@@ -8,6 +8,8 @@ import (
 	"example/advanced/models"
 	"sync"
 
+	. "example/advanced/dal/option"
+
 	"github.com/foxie-io/gormqs"
 	nghttp "github.com/foxie-io/ng/http"
 	"gorm.io/gorm"
@@ -47,9 +49,9 @@ func (s *UserService) GetUser(ctx context.Context, id int) (*dtos.GetUserRespons
 		record = new(dtos.GetUserResponse)
 	)
 
-	if err := s.userDao.GetOneTo(ctx, record, gormqs.WhereID(id)); err != nil {
+	if err := s.userDao.GetOneTo(ctx, record, USERS.ID.Eq(id)); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nghttp.NewErrNotFound().Update(nghttp.Meta("entity", "User", "id", id))
+			return nil, nghttp.NewErrNotFound().Update(nghttp.Meta("entity", "User"))
 		}
 		return nil, err
 	}
@@ -73,9 +75,9 @@ func (s *UserService) GetAllUsers(ctx context.Context, dto *dtos.ListUsersReques
 }
 
 func (s *UserService) UpdateUser(ctx context.Context, id int, req *dtos.UpdateUserRequest) (*dtos.UpdateUserResponse, error) {
-	if _, err := s.userDao.GetOne(ctx, gormqs.WhereID(id), gormqs.Select("id")); err != nil {
+	if _, err := s.userDao.GetOne(ctx, USERS.ID.Eq(id), USERS.Select(USERS.ID)); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nghttp.NewErrNotFound().Update(nghttp.Meta("entity", "User", "id", id))
+			return nil, nghttp.NewErrNotFound().Update(nghttp.Meta("entity", "User"))
 		}
 		return nil, err
 	}
@@ -98,16 +100,16 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dtos.UpdateUs
 }
 
 func (s *UserService) DeleteUser(ctx context.Context, id int) (*dtos.DeleteUserResponse, error) {
-	if _, err := s.userDao.GetOne(ctx, gormqs.WhereID(id), gormqs.Select("id")); err != nil {
+	if _, err := s.userDao.GetOne(ctx, USERS.ID.Eq(id), USERS.Select(USERS.ID)); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nghttp.NewErrNotFound().Update(nghttp.Meta("entity", "User", "id", id))
+			return nil, nghttp.NewErrNotFound().Update(nghttp.Meta("entity", "User"))
 		}
 		return nil, err
 	}
 
 	if _, err := s.userDao.Delete(ctx, gormqs.WhereID(id)); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nghttp.NewErrNotFound().Update(nghttp.Meta("entity", "User", "id", id))
+			return nil, nghttp.NewErrNotFound().Update(nghttp.Meta("entity", "User"))
 		}
 	}
 
