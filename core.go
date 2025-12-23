@@ -9,15 +9,6 @@ import (
 	nghttp "github.com/foxie-io/ng/http"
 )
 
-type EventStage string
-
-const (
-	StageAfterGuards       EventStage = "AFTER_GUARDS"
-	StageAfterHandler      EventStage = "AFTER_HANDLER"
-	StageAfterInterceptors EventStage = "AFTER_INTERCEPTORS"
-	StageAfterMiddlewares  EventStage = "AFTER_MIDDLEWARES"
-)
-
 type ResponseHandler func(ctx context.Context, resp nghttp.HttpResponse) error
 
 // convert any value to http response interface
