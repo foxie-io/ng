@@ -33,11 +33,14 @@ func (ag *TokenParser) Use(ctx context.Context, next Handler) {
 }
 */
 type Middleware interface {
+	// invoked before guards and interceptors
 	Use(ctx context.Context, next Handler)
 }
 
+// MiddlewareFunc is an adapter to allow the use of ordinary functions as Middleware.
 type MiddlewareFunc func(ctx context.Context, next Handler)
 
+// Use calls f(ctx, next).
 func (mf MiddlewareFunc) Use(ctx context.Context, next Handler) {
 	mf(ctx, next)
 }

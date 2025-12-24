@@ -8,36 +8,36 @@ import (
 	"github.com/foxie-io/ng"
 )
 
-type TraceMiddleware struct {
-	ng.DefaultID[TraceMiddleware]
+type traceMiddleware struct {
+	ng.DefaultID[traceMiddleware]
 }
 
-func (u TraceMiddleware) Use(ctx context.Context, next ng.Handler) {
-	t := &Tracer{}
+func (u traceMiddleware) Use(ctx context.Context, next ng.Handler) {
+	t := &tracer{}
 	ng.Store(ctx, t)
 	next(ctx)
 }
 
-type Tracer struct {
+type tracer struct {
 	forwards  []string
 	backwards []string
 }
 
-func (t *Tracer) traceForward(pairs ...string) {
+func (t *tracer) traceForward(pairs ...string) {
 	if len(pairs)%2 != 0 {
 		panic("pairs must be even")
 	}
 	t.forwards = append(t.forwards, pairs...)
 }
 
-func (t *Tracer) traceBackward(pairs ...string) {
+func (t *tracer) traceBackward(pairs ...string) {
 	if len(pairs)%2 != 0 {
 		panic("pairs must be even")
 	}
 	t.backwards = append(t.backwards, pairs...)
 }
 
-func (t *Tracer) Tree() string {
+func (t *tracer) tree() string {
 	indent := "   "
 	whitespace := ""
 	str := ""
@@ -63,8 +63,4 @@ func (t *Tracer) Tree() string {
 		whitespace = strings.Replace(whitespace, indent, "", 1)
 	}
 	return str
-}
-
-func (t *Tracer) PrintTree() {
-	fmt.Println("Trace Tree:\n", t.Tree())
 }

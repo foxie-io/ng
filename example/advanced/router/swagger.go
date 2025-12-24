@@ -17,7 +17,7 @@ var (
 	// implment checker
 	_ interface {
 		ng.ControllerInitializer
-		nghttp.HttpResponse
+		nghttp.HTTPResponse
 	} = (*SwaggerDocs)(nil)
 )
 
@@ -67,7 +67,7 @@ func (su *SwaggerDocs) UI() ng.Route {
 			return nil
 		}),
 		// custom response handler to serve HTML
-		ng.WithResponseHandler(func(ctx context.Context, info nghttp.HttpResponse) error {
+		ng.WithResponseHandler(func(ctx context.Context, info nghttp.HTTPResponse) error {
 			c := ng.MustLoad[echo.Context](ctx)
 
 			resp, ok := info.(*SwaggerDocs)

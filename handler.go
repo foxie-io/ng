@@ -27,7 +27,7 @@ func ScopeHandler(scopeHandler func() Handler) Handler {
 	}
 }
 
-// HandlerOption is handler option
+// WithHandler adds a handler to the route configuration
 func WithHandler(handler Handler) HandlerOption {
 	return func(c *config) {
 		c.core.handlers = append(c.core.handlers, handler)

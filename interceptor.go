@@ -34,8 +34,10 @@ type Interceptor interface {
 	Intercept(ctx context.Context, next Handler)
 }
 
+// InterceptorFunc is an adapter to allow the use of ordinary functions as Interceptors.
 type InterceptorFunc func(ctx context.Context, next Handler)
 
+// Intercept calls f(ctx, next).
 func (ifunc InterceptorFunc) Intercept(ctx context.Context, next Handler) {
 	ifunc(ctx, next)
 }

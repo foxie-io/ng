@@ -66,7 +66,7 @@ type ControllerInitializer interface {
 	InitializeController() Controller
 }
 
-// ControllerInitializer
+// DefaultControllerInitializer default implementation
 type DefaultControllerInitializer struct {
 }
 

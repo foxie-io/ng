@@ -10,7 +10,7 @@ import (
 	nghttp "github.com/foxie-io/ng/http"
 )
 
-func ServeMuxResponseHandler(ctx context.Context, info nghttp.HttpResponse) error {
+func ServeMuxResponseHandler(ctx context.Context, info nghttp.HTTPResponse) error {
 	w := ng.MustLoad[http.ResponseWriter](ctx)
 
 	if res, ok := info.(*nghttp.Response); ok {
