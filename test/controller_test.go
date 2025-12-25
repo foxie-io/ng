@@ -27,20 +27,20 @@ var _ interface {
 	ng.Middleware
 	ng.Guard
 	ng.Interceptor
-} = (*Log)(nil)
+} = (*log)(nil)
 
 func (c *UserController) InitializeController() ng.Controller {
 	return ng.NewController(
-		ng.WithMiddleware(Log{Level: levelName("CTRL", 1)}),
-		ng.WithInterceptor(Log{Level: levelName("CTRL", 1)}),
-		ng.WithGuards(Log{Level: levelName("CTRL", 1)}),
+		ng.WithMiddleware(log{Level: levelName("CTRL", 1)}),
+		ng.WithInterceptor(log{Level: levelName("CTRL", 1)}),
+		ng.WithGuards(log{Level: levelName("CTRL", 1)}),
 	)
 }
 
 func (c *UserController) Ping() ng.Route {
 	return ng.NewRoute(http.MethodGet, "/ping",
 		ng.WithHandler(func(ctx context.Context) error {
-			t := ng.MustLoad[*Tracer](ctx)
+			t := ng.MustLoad[*tracer](ctx)
 			t.traceForward("Handler", ng.GetContext(ctx).Route().Name())
 			return ng.Respond(ctx, nghttp.NewRawResponse(200, []byte("pong")))
 		}),
@@ -50,16 +50,16 @@ func (c *UserController) Ping() ng.Route {
 func (c *UserController) Register() ng.Route {
 	return ng.NewRoute(http.MethodPost, "/register",
 		ng.WithMiddleware(
-			Log{Level: levelName("ROUTE", 1)},
+			log{Level: levelName("ROUTE", 1)},
 		),
 		ng.WithGuards(
-			Log{Level: levelName("ROUTE", 1)},
+			log{Level: levelName("ROUTE", 1)},
 		),
 		ng.WithInterceptor(
-			Log{Level: levelName("ROUTE", 1)},
+			log{Level: levelName("ROUTE", 1)},
 		),
 		ng.WithHandler(func(ctx context.Context) error {
-			t := ng.MustLoad[*Tracer](ctx)
+			t := ng.MustLoad[*tracer](ctx)
 			t.traceForward("Handler", ng.GetContext(ctx).Route().Name())
 			return ng.Respond(ctx, nghttp.NewRawResponse(200, []byte("register")))
 		}),
@@ -69,16 +69,16 @@ func (c *UserController) Register() ng.Route {
 func (c *UserController) Flow() ng.Route {
 	return ng.NewRoute(http.MethodGet, "/flow",
 		ng.WithMiddleware(
-			Log{Level: levelName("ROUTE", 1)},
+			log{Level: levelName("ROUTE", 1)},
 		),
 		ng.WithGuards(
-			Log{Level: levelName("ROUTE", 1)},
+			log{Level: levelName("ROUTE", 1)},
 		),
 		ng.WithInterceptor(
-			Log{Level: levelName("ROUTE", 1)},
+			log{Level: levelName("ROUTE", 1)},
 		),
 		ng.WithHandler(func(ctx context.Context) error {
-			t := ng.MustLoad[*Tracer](ctx)
+			t := ng.MustLoad[*tracer](ctx)
 			t.traceForward("Handler", ng.GetContext(ctx).Route().Name())
 			return ng.Respond(ctx, nghttp.NewRawResponse(200, []byte("flow")))
 		}),
@@ -88,21 +88,21 @@ func (c *UserController) Flow() ng.Route {
 func (c *UserController) Trace() ng.Route {
 	return ng.NewRoute(http.MethodGet, "/trace",
 		ng.WithMiddleware(
-			Log{Level: levelName("ROUTE", 1)},
+			log{Level: levelName("ROUTE", 1)},
 		),
 		ng.WithGuards(
-			Log{Level: levelName("ROUTE", 2)},
+			log{Level: levelName("ROUTE", 2)},
 		),
 		ng.WithInterceptor(
-			Log{Level: levelName("ROUTE", 3)},
+			log{Level: levelName("ROUTE", 3)},
 		),
 		ng.WithHandler(func(ctx context.Context) error {
-			t := ng.MustLoad[*Tracer](ctx)
+			t := ng.MustLoad[*tracer](ctx)
 			t.traceForward("Handler", ng.GetContext(ctx).Route().Name())
 			return ng.Respond(ctx, nghttp.NewRawResponse(200, []byte("trace")))
 		}),
-		ng.WithResponseHandler(func(ctx context.Context, info nghttp.HttpResponse) error {
-			str := ng.MustLoad[*Tracer](ctx).Tree()
+		ng.WithResponseHandler(func(ctx context.Context, info nghttp.HTTPResponse) error {
+			str := ng.MustLoad[*tracer](ctx).tree()
 
 			w := ng.MustLoad[http.ResponseWriter](ctx)
 			w.WriteHeader(info.StatusCode())
@@ -116,7 +116,7 @@ func levelName(prefix string, level int) string {
 	return fmt.Sprintf("%s-%d", prefix, level)
 }
 
-func muxResponseHandler(ctx context.Context, info nghttp.HttpResponse) error {
+func muxResponseHandler(ctx context.Context, info nghttp.HTTPResponse) error {
 	var value []byte
 
 	switch v := info.(type) {
@@ -144,17 +144,17 @@ func muxResponseHandler(ctx context.Context, info nghttp.HttpResponse) error {
 func setupApp() (ng.App, *http.ServeMux) {
 	app := ng.NewApp(
 		ng.WithMiddleware(
-			TraceMiddleware{},
-			Log{Level: levelName("APP", 1)},
-			Log{Level: levelName("APP", 2)},
+			traceMiddleware{},
+			log{Level: levelName("APP", 1)},
+			log{Level: levelName("APP", 2)},
 		),
 		ng.WithGuards(
-			Log{Level: levelName("APP", 1)},
-			Log{Level: levelName("APP", 2)},
+			log{Level: levelName("APP", 1)},
+			log{Level: levelName("APP", 2)},
 		),
 		ng.WithInterceptor(
-			Log{Level: levelName("APP", 1)},
-			Log{Level: levelName("APP", 2)},
+			log{Level: levelName("APP", 1)},
+			log{Level: levelName("APP", 2)},
 		),
 		ng.WithResponseHandler(muxResponseHandler),
 	)

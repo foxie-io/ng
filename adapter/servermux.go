@@ -12,7 +12,8 @@ import (
 	nghttp "github.com/foxie-io/ng/http"
 )
 
-func ServeMuxResponseHandler(ctx context.Context, info nghttp.HttpResponse) error {
+// ServeMuxResponseHandler write HTTPResponse to http.ResponseWriter
+func ServeMuxResponseHandler(ctx context.Context, info nghttp.HTTPResponse) error {
 	w := ng.MustLoad[http.ResponseWriter](ctx)
 
 	if res, ok := info.(*nghttp.Response); ok {
@@ -28,6 +29,7 @@ func ServeMuxResponseHandler(ctx context.Context, info nghttp.HttpResponse) erro
 	return nil
 }
 
+// ServeMuxHandler create http.HandlerFunc from ng.Handler
 func ServeMuxHandler(scopeHandler func() ng.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, _ := ng.NewContext(r.Context())
@@ -45,6 +47,7 @@ func ServeMuxHandler(scopeHandler func() ng.Handler) http.HandlerFunc {
 	}
 }
 
+// ServeMuxRegisterRoutes register all routes from ng.App into http.ServeMux
 func ServeMuxRegisterRoutes(ng ng.App, mux *http.ServeMux) {
 	for _, route := range ng.Routes() {
 		muxPath := fmt.Sprintf("%s %s", route.Method(), route.Path())

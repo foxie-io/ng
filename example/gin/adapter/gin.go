@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GinResponseHandler(ctx context.Context, info nghttp.HttpResponse) error {
+func GinResponseHandler(ctx context.Context, info nghttp.HTTPResponse) error {
 	ginctx := ng.MustLoad[*gin.Context](ctx)
 
 	if res, ok := info.(*nghttp.Response); ok {

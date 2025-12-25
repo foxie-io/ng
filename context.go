@@ -13,10 +13,10 @@ type Context interface {
 	Storage() Storage
 
 	// SetResponse
-	SetResponse(resp nghttp.HttpResponse) Context
+	SetResponse(resp nghttp.HTTPResponse) Context
 
 	// GetResponse
-	GetResponse() nghttp.HttpResponse
+	GetResponse() nghttp.HTTPResponse
 
 	// not available pre execute
 	Route() RouteData
@@ -31,7 +31,7 @@ type Context interface {
 	setRoute(route Route) Context
 }
 
-// safe interface for route data
+// RouteData represents minimal route data
 type RouteData interface {
 	Core() Core
 	Name() string
@@ -44,7 +44,7 @@ var _ Context = (*requestContext)(nil)
 // requestContext implementation of Context
 type requestContext struct {
 	storage  Storage
-	response nghttp.HttpResponse
+	response nghttp.HTTPResponse
 	route    Route
 }
 
@@ -67,13 +67,13 @@ func (r *requestContext) Clear() {
 }
 
 // SetResponse set request response
-func (r *requestContext) SetResponse(resp nghttp.HttpResponse) Context {
+func (r *requestContext) SetResponse(resp nghttp.HTTPResponse) Context {
 	r.response = resp
 	return r
 }
 
 // Response get request response
-func (r *requestContext) GetResponse() nghttp.HttpResponse {
+func (r *requestContext) GetResponse() nghttp.HTTPResponse {
 	return r.response
 }
 
@@ -118,7 +118,7 @@ func withContext(ctx context.Context, rctx Context) context.Context {
 	return context.WithValue(ctx, TypeKey[Context]{}, rctx)
 }
 
-// if return existed ctx, otherwise create new one
+// NewContext create new request context or return existing one
 func NewContext(ctx context.Context) (context.Context, Context) {
 	rc := GetContext(ctx)
 	if rc != nil {

@@ -1,12 +1,13 @@
 package nghttp
 
 type (
-	//
-	HttpResponse interface {
-		// return HTTP status code
+
+	// HTTPResponse represents an HTTP response with status code and response body
+	HTTPResponse interface {
+		// StatusCode return http status code
 		StatusCode() int
 
-		// response body
+		// Response return response body
 		Response() any
 	}
 )

@@ -10,17 +10,17 @@ import (
 )
 
 // ThrowResponse throws an HTTP response to be caught by the framework's response handler
-func ThrowResponse(response nghttp.HttpResponse) {
+func ThrowResponse(response nghttp.HTTPResponse) {
 	panic(response)
 }
 
-// ThowAny throws any value as an HTTP response
+// ThrowAny throws any value as a panic
 func ThrowAny(value any) {
 	panic(value)
 }
 
 // Respond sets the HTTP response in the context
-func Respond(ctx context.Context, val nghttp.HttpResponse) error {
+func Respond(ctx context.Context, val nghttp.HTTPResponse) error {
 	rc := GetContext(ctx)
 	if rc != nil {
 		GetContext(ctx).SetResponse(val)

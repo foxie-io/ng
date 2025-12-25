@@ -12,7 +12,7 @@ import (
 
 type ClientIp string
 
-func DynamicResponseHandler(ctx context.Context, info nghttp.HttpResponse) error {
+func DynamicResponseHandler(ctx context.Context, info nghttp.HTTPResponse) error {
 	_, err := ng.Load[echo.Context](ctx)
 	if err == nil {
 		return EchoResponseHandler(ctx, info)

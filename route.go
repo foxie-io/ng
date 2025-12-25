@@ -9,6 +9,7 @@ import (
 var _ Route = (*route)(nil)
 
 type (
+	// Route represents an HTTP route with method, path, and handler
 	Route interface {
 		Core() Core
 		Name() string
@@ -37,6 +38,7 @@ func (r *route) Handler() Handler {
 	return r.handler
 }
 
+// HandlerOption is an alias for Option type in route creation
 type HandlerOption = Option
 
 // NewRoute create new route instance
@@ -80,7 +82,7 @@ func (r *route) addPreCore(preCores ...Core) Route {
 
 		// merge metadata
 		core.metadata.Range(func(key, value any) bool {
-			r.core.metadata.Store(key, value)
+			r.core.metadata.LoadOrStore(key, value)
 			return true
 		})
 
@@ -155,16 +157,15 @@ func (r *route) withSavedResponseState(tranformValue ValueHandler, next Handler)
 	}
 }
 
+// DefaultValueHandler default value handler implementation
 /*
-	DefaultValueHandler default value handler implementation
-
 if the value is nil, return empty response (*nghttp.Response)
 if the value is of type nghttp.HttpResponse, return it directly
 otherwise, return error response with code ErrUnknown and raw value in metadata("raw")
 */
-var DefaultValueHandler ValueHandler = func(ctx context.Context, val any) nghttp.HttpResponse {
+var DefaultValueHandler ValueHandler = func(ctx context.Context, val any) nghttp.HTTPResponse {
 	switch t := val.(type) {
-	case nghttp.HttpResponse:
+	case nghttp.HTTPResponse:
 		return t
 	default:
 		return nghttp.NewPanicError(val)

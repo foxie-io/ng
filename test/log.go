@@ -6,27 +6,30 @@ import (
 	"github.com/foxie-io/ng"
 )
 
-type Log struct {
-	ng.DefaultID[Log]
+type log struct {
+	ng.DefaultID[log]
 	Level string
 }
 
-func (u Log) Use(ctx context.Context, next ng.Handler) {
-	t := ng.MustLoad[*Tracer](ctx)
+// implementing Middleware interface
+func (u log) Use(ctx context.Context, next ng.Handler) {
+	t := ng.MustLoad[*tracer](ctx)
 	t.traceForward(u.Level, "- middleware start...")
 	defer t.traceBackward(u.Level, "- middleware ended")
 	next(ctx)
 }
 
-func (u Log) Intercept(ctx context.Context, next ng.Handler) {
-	t := ng.MustLoad[*Tracer](ctx)
+// implementing Interceptor interface
+func (u log) Intercept(ctx context.Context, next ng.Handler) {
+	t := ng.MustLoad[*tracer](ctx)
 	t.traceForward(u.Level, "- interc start...")
 	defer t.traceBackward(u.Level, "- interc ended")
 	next(ctx)
 }
 
-func (u Log) Allow(ctx context.Context) error {
-	t := ng.MustLoad[*Tracer](ctx)
+// implementing Guard interface
+func (u log) Allow(ctx context.Context) error {
+	t := ng.MustLoad[*tracer](ctx)
 	t.traceForward(u.Level, "- guard allowed")
 	return nil
 }

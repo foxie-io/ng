@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func FiberResponseHandler(ctx context.Context, info nghttp.HttpResponse) error {
+func FiberResponseHandler(ctx context.Context, info nghttp.HTTPResponse) error {
 	fctx := ng.MustLoad[*fiber.Ctx](ctx)
 
 	if res, ok := info.(*nghttp.Response); ok {

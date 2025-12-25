@@ -2,26 +2,30 @@ package nghttp
 
 var (
 	_ interface {
-		HttpResponse
+		HTTPResponse
 		error
 	} = (*PanicError)(nil)
 )
 
-// extend of NewErrUnknown
+// PanicError represents an error caused by a panic during request handling.
 type PanicError struct {
 	resp *Response
 	v    any
 }
 
-// NewErrUnknown.Response()
+// Response return underlying response data
 func (e *PanicError) Response() any { return e.resp }
 
-// NewErrUnknown.StatusCode()
+// StatusCode return http status code
 func (e *PanicError) StatusCode() int { return e.resp.StatusCode() }
 
-func (e *PanicError) Value() any    { return e.v }
+// Value return panic value
+func (e *PanicError) Value() any { return e.v }
+
+// Error return error message
 func (e *PanicError) Error() string { return *e.resp.Message }
 
+// NewPanicError create new PanicError with given value
 func NewPanicError(value any) *PanicError {
 	resp := NewErrUnknown()
 	return &PanicError{v: value, resp: resp}

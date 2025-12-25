@@ -35,8 +35,10 @@ func (c *config) update(opts ...Option) {
 	}
 }
 
+// Option is ng configuration option
 type Option func(*config)
 
+// Opitons combines multiple options into one
 func Opitons(opts ...Option) Option {
 	return func(c *config) {
 		for _, o := range opts {
