@@ -2,44 +2,78 @@ package nghttp
 
 import "net/http"
 
+// Code represents a standardized set of error codes for HTTP responses.
 type Code string
 
 const (
+	// CodeOk represents a successful operation
 	CodeOk Code = "OK"
 
 	// Client Errors (Caller / Request Faults)
 	// The request is invalid, unauthorized, or cannot be fulfilled as sent.
 
-	CodeInvalidArgument    Code = "INVALID_ARGUMENT"
-	CodeBadRequest         Code = "BAD_REQUEST"
-	CodeNotFound           Code = "NOT_FOUND"
-	CodeAlreadyExists      Code = "ALREADY_EXISTS"
-	CodePermissionDenied   Code = "PERMISSION_DENIED"
-	CodeUnauthenticated    Code = "UNAUTHENTICATED"
+	// CodeInvalidArgument   represents an invalid argument error
+	CodeInvalidArgument Code = "INVALID_ARGUMENT"
+
+	// CodeBadRequest represents a bad request error
+	CodeBadRequest Code = "BAD_REQUEST"
+
+	// CodeNotFound represents a not found error
+	CodeNotFound Code = "NOT_FOUND"
+
+	// CodeAlreadyExists represents an already exists error
+	CodeAlreadyExists Code = "ALREADY_EXISTS"
+
+	// CodePermissionDenied represents a permission denied error
+	CodePermissionDenied Code = "PERMISSION_DENIED"
+
+	// CodeUnauthenticated represents an unauthenticated error
+	CodeUnauthenticated Code = "UNAUTHENTICATED"
+
+	// CodeFailedPrecondition represents a failed precondition error
 	CodeFailedPrecondition Code = "FAILED_PRECONDITION"
-	CodeOutOfRange         Code = "OUT_OF_RANGE"
-	CodeAborted            Code = "ABORTED"
+
+	// CodeOutOfRange represents an out of range error
+	CodeOutOfRange Code = "OUT_OF_RANGE"
+
+	// CodeAborted represents an aborted operation
+	CodeAborted Code = "ABORTED"
 
 	// Client-Initiated Termination
 	// (Usually mapped to 499 Client Closed Request)
 
+	// CodeCanceled represents a canceled operation
 	CodeCanceled Code = "CANCELED"
 
 	// Rate Limiting / Quota (Client-adjacent)
 	// The client is behaving correctly but must slow down.
 
+	// CodeResourceExhausted represents a resource exhausted error
 	CodeResourceExhausted Code = "RESOURCE_EXHAUSTED"
-	CodeTooManyRequests   Code = "TOO_MANY_REQUESTS"
+
+	// CodeTooManyRequests represents a too many requests error
+	CodeTooManyRequests Code = "TOO_MANY_REQUESTS"
 
 	// 	Server Errors (Service / Infrastructure Faults)
 	// The request was valid, but the server failed to process it.
 
-	CodeUnknown          Code = "UNKNOWN"
+	// CodeUnknown represents an unknown error
+	CodeUnknown Code = "UNKNOWN"
+
+	// CodeDeadlineExceeded represents a deadline exceeded error
 	CodeDeadlineExceeded Code = "DEADLINE_EXCEEDED"
-	CodeUnimplemented    Code = "UNIMPLEMENTED"
-	CodeInternal         Code = "INTERNAL"
-	CodeUnavailable      Code = "UNAVAILABLE"
-	CodeDataLoss         Code = "DATA_LOSS"
+
+	// CodeUnimplemented represents an unimplemented error
+	CodeUnimplemented Code = "UNIMPLEMENTED"
+
+	// CodeInternal represents an internal server error
+	CodeInternal Code = "INTERNAL"
+
+	// CodeUnavailable represents a service unavailable error
+	CodeUnavailable Code = "UNAVAILABLE"
+
+	// CodeDataLoss represents a data loss error
+	CodeDataLoss Code = "DATA_LOSS"
 )
 
 // IsClientError reports whether the code represents a client-side error.
@@ -89,92 +123,93 @@ func (c Code) IsRetryable() bool {
 	}
 }
 
-// Client errors
+// NewErrInvalidArgument exists when an argument is invalid
 func NewErrInvalidArgument() *Response {
 	return NewError(CodeInvalidArgument, http.StatusBadRequest, "invalid argument")
 }
 
-// Bad request
+// NewErrBadRequest exists when the request is malformed or cannot be processed
 func NewErrBadRequest() *Response {
 	return NewError(CodeBadRequest, http.StatusBadRequest, "bad request")
 }
 
-// Not found resource
+// NewErrNotFound exists when a requested resource is not found
 func NewErrNotFound() *Response {
 	return NewError(CodeNotFound, http.StatusNotFound, "not found")
 }
 
-// Already exists when attempting to create a resource that already exists
+// NewErrAlreadyExists exists when attempting to create a resource that already exists
 func NewErrAlreadyExists() *Response {
 	return NewError(CodeAlreadyExists, http.StatusConflict, "already exists")
 }
 
-// Permission denied when the caller does not have permission to execute the specified operation
+// NewErrPermissionDenied denied when the caller does not have permission to execute the specified operation
 func NewErrPermissionDenied() *Response {
 	return NewError(CodePermissionDenied, http.StatusForbidden, "permission denied")
 }
 
-// Unauthenticated when authentication is required and has failed or has not yet been provided
+// NewErrUnauthenticated when authentication is required and has failed or has not yet been provided
 func NewErrUnauthenticated() *Response {
 	return NewError(CodeUnauthenticated, http.StatusUnauthorized, "unauthenticated")
 }
 
-// Failed precondition when a condition for the operation is not met
+// NewErrFailedPrecondition when a condition for the operation is not met
 func NewErrFailedPrecondition() *Response {
 	return NewError(CodeFailedPrecondition, http.StatusPreconditionFailed, "failed precondition")
 }
 
-// Out of range when an operation is attempted past the valid range
+// NewErrOutOfRange when an operation is attempted past the valid range
 func NewErrOutOfRange() *Response {
 	return NewError(CodeOutOfRange, http.StatusBadRequest, "out of range")
 }
 
-// Aborted operation was aborted, typically due to a concurrency issue
+// NewErrAborted operation was aborted, typically due to a concurrency issue
 func NewErrAborted() *Response {
 	return NewError(CodeAborted, http.StatusConflict, "aborted")
 }
 
-// Rate & quota when a resource has been exhausted or rate limit exceeded
+// NewErrResourceExhausted represents a resource exhaustion error, such as rate limit exceeded
 func NewErrResourceExhausted() *Response {
 	return NewError(CodeResourceExhausted, http.StatusTooManyRequests, "resource exhausted")
 }
 
-// Too many requests when rate limit is exceeded
+// NewErrTooManyRequests when rate limit is exceeded
 func NewErrTooManyRequests() *Response {
 	return NewError(CodeTooManyRequests, http.StatusTooManyRequests, "too many requests")
 }
 
-// Timeout & availability when a deadline has been exceeded
+// NewErrDeadlineExceeded when a deadline has been exceeded
 func NewErrDeadlineExceeded() *Response {
 	return NewError(CodeDeadlineExceeded, http.StatusGatewayTimeout, "deadline exceeded")
 }
 
-// Service Unavailable when the service is currently unavailable
+// NewErrUnavailable when the service is currently unavailable
 func NewErrUnavailable() *Response {
 	return NewError(CodeUnavailable, http.StatusServiceUnavailable, "unavailable")
 }
 
-// Server errors
+// NewErrInternal represents a server error
 func NewErrInternal() *Response {
 	return NewError(CodeInternal, http.StatusInternalServerError, "internal error")
 }
 
-// Unimplemented feature or method
+// NewErrUnimplemented represents an unimplemented method
 func NewErrUnimplemented() *Response {
 	return NewError(CodeUnimplemented, http.StatusNotImplemented, "unimplemented")
 }
 
-// Data loss when unrecoverable data loss or corruption occurs
+// NewErrDataLoss represents an unrecoverable data loss or corruption error
 func NewErrDataLoss() *Response {
 	return NewError(CodeDataLoss, http.StatusInternalServerError, "data loss")
 }
 
-// Cancellation
+// NewErrCancel represents a canceled operation
 func NewErrCancel() *Response {
 	// Client Closed Request (non-standard but widely used)
 	return NewError(CodeCanceled, 499, "canceled")
 }
 
+// NewErrUnknown represents an unknown error
 func NewErrUnknown() *Response {
 	return NewError(CodeUnknown, http.StatusInternalServerError, "unknown")
 }

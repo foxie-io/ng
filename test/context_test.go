@@ -27,7 +27,7 @@ func TestRequestContextPoolRacing(t *testing.T) {
 	checker := sync.Map{}
 
 	counter := atomic.Int64{}
-	newId := func() int64 {
+	newID := func() int64 {
 		return counter.Add(1)
 	}
 
@@ -40,7 +40,7 @@ func TestRequestContextPoolRacing(t *testing.T) {
 				_, ctx := ng.NewContext(context.Background())
 				defer ctx.Clear()
 
-				id := newId()
+				id := newID()
 
 				ctx.Storage().Store(Key{"id"}, id)
 				val, ok := ctx.Storage().Load(Key{"id"})

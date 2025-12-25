@@ -1,6 +1,8 @@
 package ng
 
 type (
+
+	// App is the main application interface
 	App interface {
 		Core() Core
 		Routes() []Route
@@ -25,6 +27,7 @@ func (a *app) Core() Core {
 	return a.core
 }
 
+// NewApp creates a new App instance
 func NewApp(opts ...Option) App {
 	app := &app{core: newCore()}
 	return app.update(opts...)

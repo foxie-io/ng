@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func ChiResponseHandler(ctx context.Context, info nghttp.HttpResponse) error {
+func ChiResponseHandler(ctx context.Context, info nghttp.HTTPResponse) error {
 	w := ng.MustLoad[http.ResponseWriter](ctx)
 
 	if res, ok := info.(*nghttp.Response); ok {

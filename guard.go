@@ -24,8 +24,10 @@ type Guard interface {
 	Allow(ctx context.Context) error
 }
 
+// GuardFunc is an adapter to allow the use of ordinary functions as Guards.
 type GuardFunc func(ctx context.Context) error
 
+// Allow calls f(ctx).
 func (gf GuardFunc) Allow(ctx context.Context) error {
 	return gf(ctx)
 }

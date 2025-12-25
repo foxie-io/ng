@@ -9,11 +9,13 @@ import (
 	nghttp "github.com/foxie-io/ng/http"
 )
 
-type ResponseHandler func(ctx context.Context, resp nghttp.HttpResponse) error
+// ResponseHandler defines a function to be executed before main handler
+type ResponseHandler func(ctx context.Context, resp nghttp.HTTPResponse) error
 
-// convert any value to http response interface
-type ValueHandler func(ctx context.Context, val any) nghttp.HttpResponse
+// ValueHandler converts any value to an HTTP response interface
+type ValueHandler func(ctx context.Context, val any) nghttp.HTTPResponse
 
+// Core represents the core configuration and behavior of the application.
 type (
 	Core interface {
 		Prefix() string
@@ -160,9 +162,7 @@ func WithPrefix(prefix string) Option {
 	}
 }
 
-/*
-can use IgnoreGuard to skip
-*/
+// WithGuards adds guards to the core
 func WithGuards(guards ...Guard) Option {
 	return func(c *config) {
 		c.core.guards = append(c.core.guards, guards...)
@@ -253,7 +253,7 @@ func WithResponseHandler(handler ResponseHandler) Option {
 	}
 }
 
-// root level execution: before guard,middleware,etc...
+// WithPreExecute is option for root level execution: before guard,middleware,etc...
 func WithPreExecute(pre PreHandler) Option {
 	return func(c *config) {
 		c.core.preExecutes = append(c.core.preExecutes, pre)

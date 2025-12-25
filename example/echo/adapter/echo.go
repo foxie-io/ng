@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func EchoResponseHandler(ctx context.Context, info nghttp.HttpResponse) error {
+func EchoResponseHandler(ctx context.Context, info nghttp.HTTPResponse) error {
 	ectx := ng.MustLoad[echo.Context](ctx)
 
 	if res, ok := info.(*nghttp.Response); ok {

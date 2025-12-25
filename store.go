@@ -19,12 +19,15 @@ func (p TypeKey[T]) PayloadKey() string {
 	return fmt.Sprintf("%T", p)
 }
 
+// PayloadKey is a simple string-based key
 type PayloadKey string
 
+// PayloadKey is a simple string-based key
 func (p PayloadKey) PayloadKey() string {
 	return "__" + string(p) + "__"
 }
 
+// Storage is an interface for storing key/value pairs in the context
 type Storage interface {
 	// Store store value into context by given key
 	Store(key PayloadKeyer, value any)
@@ -47,7 +50,7 @@ type Storage interface {
 }
 
 var (
-	// can be replaced for testing or self-defined storage implementation
+	// NewDefaultStorage is the default function to create Storage
 	NewDefaultStorage = func() Storage { return NewStorage() }
 )
 
@@ -56,6 +59,7 @@ type storage struct {
 	m sync.Map
 }
 
+// NewStorage creates a new instance of default Storage
 func NewStorage() Storage {
 	return &storage{}
 }
