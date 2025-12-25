@@ -1,8 +1,9 @@
 PKG := "github.com/foxie-io/ng"
 PKG_LIST := $(shell go list ${PKG}/...)
+PKG_VERSION := $(shell grep -p '^\tVersion = ' ng.go|cut -f2 -d'"')
 
 tag:
-	@git tag `grep -p '^\tVersion = ' ng.go|cut -f2 -d'"'`
+	@git tag ${PKG_VERSION}
 	@git tag|grep -v ^v
 
 .DEFAULT_GOAL := check
@@ -30,3 +31,6 @@ benchmark: ## Run benchmarks
 
 help: ## Display this help screen
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+publish:
+	GOPROXY=proxy.golang.org go list -m github.com/foxie-io/ng@${PKG_VERSION}
