@@ -2,7 +2,6 @@ package test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -116,53 +115,6 @@ func levelName(prefix string, level int) string {
 	return fmt.Sprintf("%s-%d", prefix, level)
 }
 
-func muxResponseHandler(ctx context.Context, info nghttp.HTTPResponse) error {
-	var value []byte
-
-	switch v := info.(type) {
-	case *nghttp.Response:
-		value, _ = json.Marshal(v.Response())
-
-	case *nghttp.PanicError:
-		fmt.Println("recieve (*nghttp.PanicError)", v.Value())
-		value, _ = json.Marshal(info.Response())
-
-	case *nghttp.RawResponse:
-		value = v.Value()
-
-	default:
-		fmt.Println("unknown in response", info.Response())
-		value = []byte("unknown in response value")
-	}
-
-	w := ng.MustLoad[http.ResponseWriter](ctx)
-	w.WriteHeader(info.StatusCode())
-	_, _ = w.Write(value)
-	return nil
-}
-
-func setupApp() (ng.App, *http.ServeMux) {
-	app := ng.NewApp(
-		ng.WithMiddleware(
-			traceMiddleware{},
-			log{Level: levelName("APP", 1)},
-			log{Level: levelName("APP", 2)},
-		),
-		ng.WithGuards(
-			log{Level: levelName("APP", 1)},
-			log{Level: levelName("APP", 2)},
-		),
-		ng.WithInterceptor(
-			log{Level: levelName("APP", 1)},
-			log{Level: levelName("APP", 2)},
-		),
-		ng.WithResponseHandler(muxResponseHandler),
-	)
-
-	mux := http.NewServeMux()
-	return app, mux
-}
-
 func testMuxtEndpoint(url, method, expectValue string, expectStatus int) func(t *testing.T) {
 	return func(t *testing.T) {
 		req, err := http.NewRequest(method, url, nil)
@@ -188,7 +140,23 @@ func testMuxtEndpoint(url, method, expectValue string, expectStatus int) func(t 
 }
 
 func TestServerMux(t *testing.T) {
-	app, mux := setupApp()
+	app := ng.NewApp(
+		ng.WithMiddleware(
+			traceMiddleware{},
+			log{Level: levelName("APP", 1)},
+			log{Level: levelName("APP", 2)},
+		),
+		ng.WithGuards(
+			log{Level: levelName("APP", 1)},
+			log{Level: levelName("APP", 2)},
+		),
+		ng.WithInterceptor(
+			log{Level: levelName("APP", 1)},
+			log{Level: levelName("APP", 2)},
+		),
+		ng.WithResponseHandler(ngadapter.ServeMuxResponseHandler),
+	)
+
 	app.AddController(&UserController{})
 	app.Build()
 
@@ -197,6 +165,7 @@ func TestServerMux(t *testing.T) {
 	}
 
 	// Register routes to mux
+	mux := http.NewServeMux()
 	ngadapter.ServeMuxRegisterRoutes(app, mux)
 
 	// Start test server

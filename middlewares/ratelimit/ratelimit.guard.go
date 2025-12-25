@@ -17,22 +17,43 @@ var _ interface {
 } = (*Guard)(nil)
 
 type (
+	// Config holds the rate limit configuration.
 	Config struct {
-		Limit            int
-		Window           time.Duration
-		Identifier       func(ctx context.Context) string
-		ErrorHandler     func(ctx context.Context) error
+		// Limit is the maximum number of requests allowed in the window.
+		Limit int
+
+		// Window is the duration for which the rate limit applies.
+		Window time.Duration
+
+		// Identifier generates a unique identifier for the client making the request.
+		Identifier func(ctx context.Context) string
+
+		// ErrorHandler is called when the rate limit is exceeded.
+		ErrorHandler func(ctx context.Context) error
+
+		// SetHeaderHandler is called to set rate limit headers in the response.
 		SetHeaderHandler func(ctx context.Context, key, value string)
-		MetadataKey      string
+
+		// MetadataKey is the key used to store the config in route metadata.
+		MetadataKey string
 	}
 
+	// ClientData holds the rate limit data for a specific client.
 	ClientData struct {
-		ID        string
+		// ID is the unique identifier for the client.
+		ID string
+
+		// ReqCounts is the number of requests made by the client in the current window.
 		ReqCounts int
-		ResetAt   time.Time
-		Limit     int
+
+		// ResetAt is the time when the rate limit window resets.
+		ResetAt time.Time
+
+		// Limit is the maximum number of requests allowed in the window.
+		Limit int
 	}
 
+	// Guard is the rate limiting middleware.
 	Guard struct {
 		ng.DefaultID[Guard]
 		clients map[string]*ClientData
@@ -41,7 +62,7 @@ type (
 	}
 )
 
-// allow replaces the default configuration with user-provided values
+// DefaultConfig provides default settings for the rate limiter.
 var DefaultConfig = &Config{
 	Limit:  100,
 	Window: time.Minute,
@@ -68,6 +89,7 @@ func New(config *Config) *Guard {
 	return guard
 }
 
+// Allow checks if the request is allowed under the rate limit.
 func (g *Guard) Allow(ctx context.Context) error {
 	config := g.config
 

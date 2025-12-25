@@ -14,18 +14,30 @@ import (
 
 // ServeMuxResponseHandler write HTTPResponse to http.ResponseWriter
 func ServeMuxResponseHandler(ctx context.Context, info nghttp.HTTPResponse) error {
-	w := ng.MustLoad[http.ResponseWriter](ctx)
+	var (
+		w     = ng.MustLoad[http.ResponseWriter](ctx)
+		value []byte
+	)
 
-	if res, ok := info.(*nghttp.Response); ok {
-		if res.Code == nghttp.CodeUnknown {
-			raw, _ := res.GetMetadata("raw")
-			res.Update(nghttp.Meta("error", fmt.Sprintf("%v", raw)))
-		}
+	switch v := info.(type) {
+	case *nghttp.Response:
+		w.Header().Set("content-type", "application/json")
+		value, _ = json.Marshal(v.Response())
+
+	case *nghttp.PanicError:
+		fmt.Println("recieve (*nghttp.PanicError)", v.Value())
+		value, _ = json.Marshal(info.Response())
+
+	case *nghttp.RawResponse:
+		value = v.Value()
+
+	default:
+		fmt.Println("unknown in response", info.Response())
+		value = []byte("unknown in response value")
 	}
 
 	w.WriteHeader(info.StatusCode())
-	bytes, _ := json.Marshal(info.Response())
-	_, _ = w.Write(bytes)
+	_, _ = w.Write(value)
 	return nil
 }
 
