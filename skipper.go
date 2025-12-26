@@ -4,7 +4,7 @@ package ng
 // during request execution.
 //
 // By implementing the Skipper interface and returning a unique NgID,
-// components can be identified for skipping based on route or handler metadata.
+// features can be identified for skipping based on route or handler metadata.
 //
 // This is useful for scenarios such as:
 //   - Bypassing authentication guards for public endpoints
@@ -31,7 +31,7 @@ import (
 )
 
 type (
-	// ID represents a unique identifier for skippable components.
+	// ID represents a unique identifier for skippable features.
 	ID interface {
 		NgID() string
 	}
@@ -65,7 +65,7 @@ func (s DefaultID[T]) NgID() string {
 	return fmt.Sprintf("skipper_%T", s)
 }
 
-// WithSkip can be used in app, controller, route to skip certain skippable components.
+// WithSkip can be used in app, controller, route to skip certain skippable features.
 // For example, to skip certain guards, middlewares, or interceptors.
 func WithSkip(skippers ...ID) Option {
 	skipIds := make([]string, len(skippers))

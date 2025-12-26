@@ -610,7 +610,7 @@ func (i ResponseWrapperInterceptor) Intercept(ctx context.Context, next ng.Handl
 
 ### Metadata
 
-Metadata allows dynamic configuration of routes, controllers, and components. It's inspired by NestJS decorators.
+Metadata allows dynamic configuration of routes, controllers, and features. It's inspired by NestJS decorators.
 
 **Using Metadata:**
 
@@ -789,7 +789,7 @@ ng.WithSkip(CustomMiddleware{})
 **Key Points:**
 
 - Use `DefaultID[T]` for automatic ID generation
-- Use `WithSkip()` to skip specific components
+- Use `WithSkip()` to skip specific features
 - Use `SkipAllGuards()` for public endpoints
 - Skippers work with middleware, guards, and interceptors
 

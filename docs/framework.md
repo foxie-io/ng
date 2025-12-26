@@ -227,7 +227,7 @@ example/
       stats.go
       limiter/
         ratelimit.go
-    components/
+    features/
       orders/
         order.app.go
         order.controller.go
@@ -246,7 +246,7 @@ Controllers group related routes and provide a modular way to manage application
 
 ### Middleware
 
-Middlewares are reusable components that process requests and responses. Examples include logging, rate limiting, and statistics collection.
+Middlewares are reusable features that process requests and responses. Examples include logging, rate limiting, and statistics collection.
 
 ### Guards
 
@@ -267,13 +267,13 @@ Adapters allow NG to work with multiple HTTP frameworks. Supported frameworks in
 
 ## Overview
 
-Metadata in the NG framework allows you to attach additional information to routes, controllers, and other components. This pattern is inspired by NestJS and provides a flexible way to modify behavior dynamically based on metadata.
+Metadata in the NG framework allows you to attach additional information to routes, controllers, and other features. This pattern is inspired by NestJS and provides a flexible way to modify behavior dynamically based on metadata.
 
 ---
 
 ## What is Metadata?
 
-Metadata is structured data that can be associated with routes, controllers, or other components in the NG framework. It is used to:
+Metadata is structured data that can be associated with routes, controllers, or other features in the NG framework. It is used to:
 
 - Pass configuration options.
 - Enable or disable middleware or guards dynamically.
@@ -283,7 +283,7 @@ Metadata is structured data that can be associated with routes, controllers, or 
 
 ## Metadata in Routes
 
-You can attach metadata to routes using the `ng.WithMetadata` option. This metadata can then be accessed by middleware, guards, or other components.
+You can attach metadata to routes using the `ng.WithMetadata` option. This metadata can then be accessed by middleware, guards, or other features.
 
 ### Example: Attaching Metadata to a Route
 
@@ -379,7 +379,7 @@ The NG framework provides a mechanism to conditionally skip middleware, guards, 
 
 ### ID Interface
 
-The `ID` interface is used to uniquely identify components that can be skipped. It ensures that each component has a stable and unique identifier.
+The `ID` interface is used to uniquely identify features that can be skipped. It ensures that each component has a stable and unique identifier.
 
 ```go
 type ID interface {
@@ -396,7 +396,7 @@ ng.WithSkipper(AuthGuard{})
 
 ### DefaultID
 
-The `DefaultID` generic type allows skipping components by their concrete type. For example:
+The `DefaultID` generic type allows skipping features by their concrete type. For example:
 
 ```go
 type AuthGuard struct {
@@ -409,7 +409,7 @@ This will prevent the `AuthGuard` from executing for the configured route.
 
 ### Skipper Utilities
 
-- **WithSkip**: Attaches skipper metadata to a route or handler. Components implementing the `ID` interface can be skipped if their `NgID` matches the provided skipper IDs.
+- **WithSkip**: Attaches skipper metadata to a route or handler. features implementing the `ID` interface can be skipped if their `NgID` matches the provided skipper IDs.
 
   ```go
   func WithSkip(skippers ...ID) Option
